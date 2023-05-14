@@ -11,9 +11,9 @@ class QLearningAgent:
 
     def get_state(self, ball, paddle, bricks):
         possible_actions = ['stay']
-        if paddle.xcor() > -240:
+        if paddle.xcor() > -420:
             possible_actions.append('left')
-        if paddle.xcor() < 240:
+        if paddle.xcor() < 420:
             possible_actions.append('right')
         return possible_actions
 
@@ -34,10 +34,10 @@ class QLearningAgent:
     def get_possible_actions(self, state):
         # funkcja zwracająca możliwe akcje dla danego stanu
         # paletka nie może wychodzić poza obszar gry
-        paddle_position = state[2]
-        if paddle_position > 0 and paddle_position < 140:
+        paddle_position = state[1]
+        if paddle_position[0] > -420 and paddle_position[0] < 420:
             return ['LEFT', 'RIGHT']
-        elif paddle_position <= 0:
+        elif paddle_position[0] <= -420:
             return ['RIGHT']
         else:
             return ['LEFT']

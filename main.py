@@ -17,7 +17,7 @@ screen.tracer(0)
 ui = UI()
 ui.header()
 
-score = Scoreboard(lives=5)
+score = Scoreboard(lives=3)
 paddle = Paddle()
 bricks = Bricks()
 
@@ -149,10 +149,10 @@ agent = QLearningAgent()
 
 while True:
     # reset the game
-    score.lives = 5
+    score.lives = 3
     bricks.reset()
     ball.reset()
-    paddle.reset()
+    paddle.goto(x=0, y=-280)
     game_paused = False
     playing_game = True
 
@@ -219,6 +219,7 @@ while True:
                 next_bricks_state = bricks.get_state()
                 next_state = (next_ball_state, next_paddle_state, next_bricks_state)
                 agent.update_q_value(state, action, next_state, reward)
+
 
         else:
             ui.paused_status()
