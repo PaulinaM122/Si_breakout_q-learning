@@ -1,4 +1,6 @@
 import turtle as tr
+
+from QLearningAgent import QLearningAgent
 from paddle import Paddle
 from ball import Ball
 from scoreboard import Scoreboard
@@ -142,9 +144,10 @@ def check_collision_with_bricks():
             elif ball.ycor() > brick.upper_wall:
                 ball.bounce(x_bounce=False, y_bounce=True)
 
+# create Q-learning agent
+agent = QLearningAgent()
 
 while playing_game:
-
     if not game_paused:
 
         # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
@@ -159,14 +162,57 @@ while playing_game:
         check_collision_with_paddle()
 
         # DETECTING COLLISION WITH A BRICK
-        check_collision_with_bricks()
+        if check_collision_with_bricks():
+            # get reward for breaking the brick
+            reward = 1
+            # update Q-values
+            state = agent.get_state(ball, paddle, bricks)
+            action = agent.get_action(state)
+            next_state = agent.get_state(ball, paddle, bricks)
+            agent.update_q_value(state, action, next_state, reward)
 
         # DETECTING USER'S VICTORY
         if len(bricks.bricks) == 0:
             ui.game_over(win=True)
+            # get reward for winning the game
+            reward = 1
+            # update Q-values
+            state = agent.get_state(ball, paddle, bricks)
+            action = agent.get_action(state)
+            agent.update_q_value(state, action, None, reward)
             break
+
+        # get current state and action
+        ball_state = ball.pos()
+        paddle_state = paddle.pos()
+        bricks_state = bricks.get_state()
+        state = (ball_state, paddle_state, bricks_state)
+        action = agent.get_action(state)
+
+        # update Q-values
+        if state is not None and action is not None:
+            agent.update_q_value(state, action, state, 0)
+
+        # perform action
+        if action == 'LEFT':
+            paddle.move_left()
+        elif action == 'RIGHT':
+            paddle.move_right()
+
+        # DETECTING COLLISION WITH A BRICK
+        if check_collision_with_bricks():
+            # get reward for breaking the brick
+            reward = 1
+            # update Q-values
+            next_ball_state = ball.pos()
+            next_paddle_state = paddle.pos()
+            next_bricks_state = bricks.get_state()
+            next_state = (next_ball_state, next_paddle_state, next_bricks_state)
+            agent.update_q_value(state, action, next_state, reward)
+
 
     else:
         ui.paused_status()
 
 tr.mainloop()
+

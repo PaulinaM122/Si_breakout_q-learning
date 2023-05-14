@@ -46,3 +46,16 @@ class Bricks:
     def create_all_lanes(self):
         for i in range(self.y_start, self.y_end, 32):
             self.create_lane(i)
+
+    def get_state(self):
+        return len(self.bricks)
+
+    def reset(self):
+        # usuń wszystkie klocki
+        for brick in self.bricks:
+            brick.clear()
+            brick.hideturtle()
+        self.bricks = []
+
+        # utwórz klocki ponownie
+        self.create_all_lanes()

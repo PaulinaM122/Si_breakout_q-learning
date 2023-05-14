@@ -12,11 +12,15 @@ class Ball(Turtle):
         self.x_move_dist = MOVE_DIST
         self.y_move_dist = MOVE_DIST
         self.reset()
+        self.last_position = None
+        self.current_position = self.position()
 
     def move(self):
+        self.last_position = self.current_position
         new_y = self.ycor() + self.y_move_dist
         new_x = self.xcor() + self.x_move_dist
         self.goto(x=new_x, y=new_y)
+        self.current_position = self.position()
 
     def bounce(self, x_bounce, y_bounce):
         if x_bounce:
@@ -28,3 +32,15 @@ class Ball(Turtle):
     def reset(self):
         self.goto(x=0, y=-240)
         self.y_move_dist = 10
+
+    def get_reward(self):
+        if self.ycor() == 240:  # collision with top wall
+            return 1
+        elif self.ycor() == -240:  # collision with bottom wall
+            return -1
+        else:
+            return 0
+
+    def get_state(self):
+        state = [self.xcor(), self.ycor(), self.x_move_dist, self.y_move_dist]
+        return state
