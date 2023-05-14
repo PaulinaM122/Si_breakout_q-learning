@@ -147,72 +147,96 @@ def check_collision_with_bricks():
 # create Q-learning agent
 agent = QLearningAgent()
 
-while playing_game:
-    if not game_paused:
+while True:
+    # reset the game
+    score.lives = 5
+    bricks.reset()
+    ball.reset()
+    paddle.reset()
+    game_paused = False
+    playing_game = True
 
-        # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
-        screen.update()
-        time.sleep(0.01)
-        ball.move()
+    # start a new game
+    while playing_game:
+        if not game_paused:
 
-        # DETECTING COLLISION WITH WALLS
-        check_collision_with_walls()
+            # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
+            screen.update()
+            time.sleep(0.01)
+            ball.move()
 
-        # DETECTING COLLISION WITH THE PADDLE
-        check_collision_with_paddle()
+            # DETECTING COLLISION WITH WALLS
+            check_collision_with_walls()
 
-        # DETECTING COLLISION WITH A BRICK
-        if check_collision_with_bricks():
-            # get reward for breaking the brick
-            reward = 1
-            # update Q-values
-            state = agent.get_state(ball, paddle, bricks)
+            # DETECTING COLLISION WITH THE PADDLE
+            check_collision_with_paddle()
+
+            # DETECTING COLLISION WITH A BRICK
+            if check_collision_with_bricks():
+                # get reward for breaking the brick
+                reward = 1
+                # update Q-values
+                state = agent.get_state(ball, paddle, bricks)
+                action = agent.get_action(state)
+                next_state = agent.get_state(ball, paddle, bricks)
+                agent.update_q_value(state, action, next_state, reward)
+
+            # DETECTING USER'S VICTORY
+            if len(bricks.bricks) == 0:
+                ui.game_over(win=True)
+                # get reward for winning the game
+                reward = 1
+                # update Q-values
+                state = agent.get_state(ball, paddle, bricks)
+                action = agent.get_action(state)
+                agent.update_q_value(state, action, state, reward)
+                playing_game = False
+
+            # get current state and action
+            ball_state = ball.pos()
+            paddle_state = paddle.pos()
+            bricks_state = bricks.get_state()
+            state = (ball_state, paddle_state, bricks_state)
             action = agent.get_action(state)
-            next_state = agent.get_state(ball, paddle, bricks)
-            agent.update_q_value(state, action, next_state, reward)
 
-        # DETECTING USER'S VICTORY
-        if len(bricks.bricks) == 0:
-            ui.game_over(win=True)
-            # get reward for winning the game
-            reward = 1
             # update Q-values
-            state = agent.get_state(ball, paddle, bricks)
-            action = agent.get_action(state)
-            agent.update_q_value(state, action, None, reward)
-            break
+            if state is not None and action is not None:
+                agent.update_q_value(state, action, state, 0)
 
-        # get current state and action
-        ball_state = ball.pos()
-        paddle_state = paddle.pos()
-        bricks_state = bricks.get_state()
-        state = (ball_state, paddle_state, bricks_state)
-        action = agent.get_action(state)
+            # perform action
+            if action == 'LEFT':
+                paddle.move_left()
+            elif action == 'RIGHT':
+                paddle.move_right()
 
-        # update Q-values
-        if state is not None and action is not None:
-            agent.update_q_value(state, action, state, 0)
+            # DETECTING COLLISION WITH A BRICK
+            if check_collision_with_bricks():
+                # get reward for breaking the brick
+                reward = 1
+                # update Q-values
+                next_ball_state = ball.pos()
+                next_paddle_state = paddle.pos()
+                next_bricks_state = bricks.get_state()
+                next_state = (next_ball_state, next_paddle_state, next_bricks_state)
+                agent.update_q_value(state, action, next_state, reward)
 
-        # perform action
-        if action == 'LEFT':
-            paddle.move_left()
-        elif action == 'RIGHT':
-            paddle.move_right()
+        else:
+            ui.paused_status()
 
-        # DETECTING COLLISION WITH A BRICK
-        if check_collision_with_bricks():
-            # get reward for breaking the brick
-            reward = 1
-            # update Q-values
-            next_ball_state = ball.pos()
-            next_paddle_state = paddle.pos()
-            next_bricks_state = bricks.get_state()
-            next_state = (next_ball_state, next_paddle_state, next_bricks_state)
-            agent.update_q_value(state, action, next_state, reward)
-
-
+    # check if the agent won the game
+    if len(bricks.bricks) == 0:
+        ui.game_over(win=True)
     else:
-        ui.paused_status()
+        ui.game_over(win=False)
+        # agent lost the game, start over
+        continue
 
-tr.mainloop()
+    # check if the maximum number of games has been reached
+    if agent.num_games >= agent.max_num_games:
+        break
+
+    # train the agent for the next game
+    agent.train()
+
+
 
