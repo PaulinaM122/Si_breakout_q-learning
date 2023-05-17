@@ -42,7 +42,7 @@ class UI(Turtle):
 
     def game_over(self, win):
         self.clear()
-        if win == True:
-            self.write('You Cleared the Game', align='center', font=FONT)
+        if win:
+            self.write('You Cleared the Game!', align='center', font=FONT)
         else:
             self.write("Game is Over", align='center', font=FONT)

@@ -8,10 +8,6 @@ COLOR_LIST = ['light blue', 'royal blue',
               'sandy brown', 'purple', 'deep pink',
               'medium sea green', 'khaki']
 
-weights = [1, 2, 1, 1, 3, 2, 1, 4, 1,
-           3, 1, 1, 1, 4, 1, 3, 2, 2,
-           1, 2, 1, 2, 1, 2, 1]
-
 
 class Brick(Turtle):
     def __init__(self, x_cor, y_cor):
@@ -21,8 +17,6 @@ class Brick(Turtle):
         self.shapesize(stretch_wid=1.5, stretch_len=3)
         self.color(random.choice(COLOR_LIST))
         self.goto(x=x_cor, y=y_cor)
-
-        self.quantity = random.choice(weights)
 
         # Defining borders of the brick
         self.left_wall = self.xcor() - 30
@@ -48,6 +42,7 @@ class Bricks:
             self.create_lane(i)
 
     def get_state(self):
+        # TODO: tu pewnie trzeba będzie zwracać jakąś, które bricki zostały do zbicia, ale to się okaże jak będziemy trenować agenta, bo nie wiemy czego on potrzebuje
         return len(self.bricks)
 
     def reset(self):

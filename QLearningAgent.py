@@ -1,21 +1,18 @@
 import random
+from Direction import Direction as Dir
+
 
 class QLearningAgent:
     def __init__(self, alpha=0.1, gamma=0.9, epsilon=0.1):
-        self.alpha = alpha # współczynnik uczenia się
-        self.gamma = gamma # współczynnik dyskontowania
-        self.epsilon = epsilon # współczynnik eksploracji
-        self.q_values = {} # słownik przechowujący wartości Q-funkcji dla każdego stanu i akcji
+        self.alpha = alpha  # współczynnik uczenia się
+        self.gamma = gamma  # współczynnik dyskontowania
+        self.epsilon = epsilon  # współczynnik eksploracji
+        self.q_values = {}  # słownik przechowujący wartości Q-funkcji dla każdego stanu i akcji
         self.num_games = 0  # licznik gier
         self.max_num_games = 10000  # maksymalna liczba gier do rozegrania
 
     def get_state(self, ball, paddle, bricks):
-        possible_actions = ['stay']
-        if paddle.xcor() > -420:
-            possible_actions.append('left')
-        if paddle.xcor() < 420:
-            possible_actions.append('right')
-        return possible_actions
+        return ball.pos(), paddle.pos(), bricks.get_state()
 
     def get_q_value(self, state, action):
         # funkcja zwracająca wartość Q-funkcji dla danego stanu i akcji
@@ -37,17 +34,15 @@ class QLearningAgent:
         # paletka nie może wychodzić poza obszar gry
         paddle_position = state[1]
         if paddle_position[0] > -420 and paddle_position[0] < 420:
-            return ['LEFT', 'RIGHT']
+            return [Dir.LEFT, Dir.RIGHT, Dir.STAY]
         elif paddle_position[0] <= -420:
-            return ['RIGHT']
+            return [Dir.RIGHT, Dir.STAY]
         else:
-            return ['LEFT']
+            return [Dir.LEFT, Dir.STAY]
 
     def get_best_action(self, state):
         # funkcja zwracająca najlepszą akcję dla danego stanu
         possible_actions = self.get_possible_actions(state)
-        if not possible_actions:
-            return None
         return max(possible_actions, key=lambda action: self.get_q_value(state, action)) # nie działa bo nie jest dokończone get_q_value
 
     def get_action(self, state):
@@ -67,5 +62,6 @@ class QLearningAgent:
         return self.max_num_games
 
     def train(self):
-        # funkcja trenująca agenta na kolejnej grze - trzeba dokończyć!
+        # funkcja trenująca agenta na kolejnej grze
+        # TODO: trzeba dokończyć
         self.num_games += 1

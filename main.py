@@ -6,6 +6,7 @@ from ball import Ball
 from scoreboard import Scoreboard
 from ui import UI
 from bricks import Bricks
+from Direction import Direction as Dir
 import time
 
 screen = tr.Screen()
@@ -42,7 +43,7 @@ screen.onkey(key='space', fun=pause_game)
 
 
 def check_collision_with_walls():
-    global ball, score, playing_game, ui
+    global ball
 
     # detect collision with left and right walls:
     if ball.xcor() < -580 or ball.xcor() > 570:
@@ -54,7 +55,10 @@ def check_collision_with_walls():
         ball.bounce(x_bounce=False, y_bounce=True)
         return
 
-    # detect collision with bottom wall
+
+def check_collision_with_bottom_wall():
+    global ball, score, playing_game, ui
+
     # In this case, user failed to hit the ball
     # thus he loses. The game resets.
     if ball.ycor() < -280:
@@ -64,9 +68,9 @@ def check_collision_with_walls():
             score.reset()
             playing_game = False
             ui.game_over(win=False)
-            return
         ui.change_color()
-        return
+        return True
+    return False
 
 
 def check_collision_with_paddle():
@@ -117,16 +121,18 @@ def check_collision_with_paddle():
 
 
 def check_collision_with_bricks():
+    # returns True/False
+    # TODO: tu jest zdecydowanie coś źle z tym sprawdzaniem, bo czasem zbija dużo po skosie, ale możemy tak zostawić xd
     global ball, score, bricks
+    collided = False
 
     for brick in bricks.bricks:
         if ball.distance(brick) < 40:
+            collided = True
             score.increase_score()
-            brick.quantity -= 1
-            if brick.quantity == 0:
-                brick.clear()
-                brick.goto(3000, 3000)
-                bricks.bricks.remove(brick)
+            brick.clear()
+            brick.goto(3000, 3000)
+            bricks.bricks.remove(brick)
 
             # detect collision from left
             if ball.xcor() < brick.left_wall:
@@ -144,10 +150,17 @@ def check_collision_with_bricks():
             elif ball.ycor() > brick.upper_wall:
                 ball.bounce(x_bounce=False, y_bounce=True)
 
+            break
+
+    return collided
+
+
 # create Q-learning agent
 agent = QLearningAgent()
 
-while True:  # brakuje nagrody ujemnej, trzeba zaimplementować dla lepszych rezultatów uczenia
+while True:
+    # TODO: dodałam nagrodę ujemną, ale nie wiem, czy robimy wszystko na wartościach 1/-1, czy właśnie dajemy, że dostaje wtedy -100, żeby mocno tego unikał
+    # tak jest na tej stronce, dają +/- 100 za wygraną/przegraną https://www.freecodecamp.org/news/an-introduction-to-q-learning-reinforcement-learning-14ac0b4493cc/
     # reset the game
     score.lives = 3
     bricks.reset()
@@ -160,6 +173,16 @@ while True:  # brakuje nagrody ujemnej, trzeba zaimplementować dla lepszych rez
     while playing_game:
         if not game_paused:
 
+            reward = 0
+            state = agent.get_state(ball, paddle, bricks)
+            action = agent.get_action(state)
+
+            # perform action
+            if action == Dir.LEFT:
+                paddle.move_left()
+            elif action == Dir.RIGHT:
+                paddle.move_right()
+
             # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
             screen.update()
             time.sleep(0.01)
@@ -167,6 +190,8 @@ while True:  # brakuje nagrody ujemnej, trzeba zaimplementować dla lepszych rez
 
             # DETECTING COLLISION WITH WALLS
             check_collision_with_walls()
+            if check_collision_with_bottom_wall:
+                reward += -100
 
             # DETECTING COLLISION WITH THE PADDLE
             check_collision_with_paddle()
@@ -174,52 +199,17 @@ while True:  # brakuje nagrody ujemnej, trzeba zaimplementować dla lepszych rez
             # DETECTING COLLISION WITH A BRICK
             if check_collision_with_bricks():
                 # get reward for breaking the brick
-                reward = 1
-                # update Q-values
-                state = agent.get_state(ball, paddle, bricks)
-                action = agent.get_action(state)
-                next_state = agent.get_state(ball, paddle, bricks)
-                agent.update_q_value(state, action, next_state, reward)
+                reward += 1
 
             # DETECTING USER'S VICTORY
             if len(bricks.bricks) == 0:
                 ui.game_over(win=True)
-                # get reward for winning the game
-                reward = 1
-                # update Q-values
-                state = agent.get_state(ball, paddle, bricks)
-                action = agent.get_action(state)
-                agent.update_q_value(state, action, state, reward)
                 playing_game = False
-
-            # get current state and action
-            ball_state = ball.pos()
-            paddle_state = paddle.pos()
-            bricks_state = bricks.get_state()
-            state = (ball_state, paddle_state, bricks_state)
-            action = agent.get_action(state)
+                reward += 100
 
             # update Q-values
-            if state is not None and action is not None:
-                agent.update_q_value(state, action, state, 0)
-
-            # perform action
-            if action == 'LEFT':
-                paddle.move_left()
-            elif action == 'RIGHT':
-                paddle.move_right()
-
-            # DETECTING COLLISION WITH A BRICK
-            if check_collision_with_bricks():
-                # get reward for breaking the brick
-                reward = 1
-                # update Q-values
-                next_ball_state = ball.pos()
-                next_paddle_state = paddle.pos()
-                next_bricks_state = bricks.get_state()
-                next_state = (next_ball_state, next_paddle_state, next_bricks_state)
-                agent.update_q_value(state, action, next_state, reward)
-
+            next_state = agent.get_state(ball, paddle, bricks)
+            agent.update_q_value(state, action, next_state, reward)
 
         else:
             ui.paused_status()
@@ -238,6 +228,3 @@ while True:  # brakuje nagrody ujemnej, trzeba zaimplementować dla lepszych rez
 
     # train the agent for the next game
     agent.train()
-
-
-
