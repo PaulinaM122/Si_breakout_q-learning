@@ -147,7 +147,7 @@ def check_collision_with_bricks():
 # create Q-learning agent
 agent = QLearningAgent()
 
-while True:
+while True:  # brakuje nagrody ujemnej, trzeba zaimplementować dla lepszych rezultatów uczenia
     # reset the game
     score.lives = 3
     bricks.reset()

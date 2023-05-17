@@ -25,6 +25,7 @@ class QLearningAgent:
     def update_q_value(self, state, action, next_state, reward):
         # funkcja aktualizująca wartość Q-funkcji dla danego stanu i akcji
         current_q = self.get_q_value(state, action)
+        # uproszczone równanie Bellmana (można inne wzory na update q-value) :
         max_next_q = max(
             [self.get_q_value(next_state, next_action) for next_action in self.get_possible_actions(next_state)])
         new_q = current_q + self.alpha * (reward + self.gamma * max_next_q - current_q)
@@ -47,7 +48,7 @@ class QLearningAgent:
         possible_actions = self.get_possible_actions(state)
         if not possible_actions:
             return None
-        return max(possible_actions, key=lambda action: self.get_q_value(state, action))
+        return max(possible_actions, key=lambda action: self.get_q_value(state, action)) # nie działa bo nie jest dokończone get_q_value
 
     def get_action(self, state):
         # funkcja zwracająca akcję dla danego stanu
@@ -66,5 +67,5 @@ class QLearningAgent:
         return self.max_num_games
 
     def train(self):
-        # funkcja trenująca agenta na kolejnej grze
+        # funkcja trenująca agenta na kolejnej grze - trzeba dokończyć!
         self.num_games += 1
