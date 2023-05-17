@@ -31,16 +31,4 @@ class Ball(Turtle):
 
     def reset(self):
         self.goto(x=0, y=-240)
-        self.y_move_dist = 10
-
-    def get_reward(self):
-        if self.ycor() == 240:  # collision with top wall
-            return 1
-        elif self.ycor() == -240:  # collision with bottom wall
-            return -1
-        else:
-            return 0
-
-    def get_state(self):
-        state = [self.xcor(), self.ycor(), self.x_move_dist, self.y_move_dist]
-        return state
+        self.y_move_dist = MOVE_DIST

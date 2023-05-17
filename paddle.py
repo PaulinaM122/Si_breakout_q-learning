@@ -17,6 +17,3 @@ class Paddle(Turtle):
 
     def move_right(self):
         self.forward(MOVE_DIST)
-
-    def get_state(self, ball, bricks):
-        return ball.xcor(), ball.ycor(), int(self.xcor()), *bricks
