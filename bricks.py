@@ -43,7 +43,7 @@ class Bricks:
 
     def get_state(self):
         # TODO: tu pewnie trzeba będzie zwracać jakąś, które bricki zostały do zbicia, ale to się okaże jak będziemy trenować agenta, bo nie wiemy czego on potrzebuje
-        return len(self.bricks)
+        return len(self.bricks)  # próbowałam zwracać listę współrzędnych cegieł, ale nie można się nią odwołać do q_values, więc trzeba będzie to zrobić jakoś inaczej
 
     def reset(self):
         # usuń wszystkie klocki

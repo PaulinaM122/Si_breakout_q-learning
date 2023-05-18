@@ -10,6 +10,8 @@ class QLearningAgent:
         self.q_values = {}  # słownik przechowujący wartości Q-funkcji dla każdego stanu i akcji
         self.num_games = 0  # licznik gier
         self.max_num_games = 10000  # maksymalna liczba gier do rozegrania
+        self.reward_history = [0] * self.max_num_games
+        self.success_history = []
 
     def get_state(self, ball, paddle, bricks):
         return ball.pos(), paddle.pos(), bricks.get_state()
@@ -65,3 +67,9 @@ class QLearningAgent:
         # funkcja trenująca agenta na kolejnej grze
         # TODO: trzeba dokończyć
         self.num_games += 1
+
+    def evaluate(self):
+        # TODO: możemy tu dać np obliczanie średnich, żeby zobaczyć, jak zmienić parametry w treningu i na koniec do tworzenia staystyk/wykresów
+        success_rate = sum(self.success_history) / self.num_games
+        avg_reward = sum(self.reward_history) / self.num_games
+        return success_rate, avg_reward

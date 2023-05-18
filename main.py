@@ -192,6 +192,7 @@ while True:
             check_collision_with_walls()
             if check_collision_with_bottom_wall():
                 reward += -100
+                agent.success_history.append(0)
 
             # DETECTING COLLISION WITH THE PADDLE
             check_collision_with_paddle()
@@ -206,6 +207,9 @@ while True:
                 ui.game_over(win=True)
                 playing_game = False
                 reward += 100
+                agent.success_history.append(1)
+
+            agent.reward_history[agent.num_games] += reward
 
             # update Q-values
             next_state = agent.get_state(ball, paddle, bricks)
@@ -220,7 +224,6 @@ while True:
     else:
         ui.game_over(win=False)
         # agent lost the game, start over
-        continue
 
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
