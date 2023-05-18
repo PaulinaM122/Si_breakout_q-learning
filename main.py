@@ -24,22 +24,20 @@ bricks = Bricks()
 
 ball = Ball()
 
-game_paused = False
 playing_game = True
+training_agent = True
 
 
-def pause_game():
-    global game_paused
-    if game_paused:
-        game_paused = False
-    else:
-        game_paused = True
+def leave_game():
+    global playing_game, training_agent
+    playing_game = False
+    training_agent = False
 
 
 screen.listen()
 screen.onkey(key='Left', fun=paddle.move_left)
 screen.onkey(key='Right', fun=paddle.move_right)
-screen.onkey(key='space', fun=pause_game)
+screen.onkey(key='Escape', fun=leave_game)
 
 
 def check_collision_with_walls():
@@ -158,65 +156,58 @@ def check_collision_with_bricks():
 # create Q-learning agent
 agent = QLearningAgent()
 
-while True:
-    # TODO: dodałam nagrodę ujemną, ale nie wiem, czy robimy wszystko na wartościach 1/-1, czy właśnie dajemy, że dostaje wtedy -100, żeby mocno tego unikał
-    # tak jest na tej stronce, dają +/- 100 za wygraną/przegraną https://www.freecodecamp.org/news/an-introduction-to-q-learning-reinforcement-learning-14ac0b4493cc/
+while training_agent:
+
     # reset the game
     score.lives = 3
     bricks.reset()
     ball.reset()
     paddle.goto(x=0, y=-280)
-    game_paused = False
     playing_game = True
 
     # start a new game
     while playing_game:
-        if not game_paused:
+        reward = 0
+        state = agent.get_state(ball, paddle, bricks)
+        action = agent.get_action(state)
 
-            reward = 0
-            state = agent.get_state(ball, paddle, bricks)
-            action = agent.get_action(state)
+        # perform action
+        if action == Dir.LEFT:
+            paddle.move_left()
+        elif action == Dir.RIGHT:
+            paddle.move_right()
 
-            # perform action
-            if action == Dir.LEFT:
-                paddle.move_left()
-            elif action == Dir.RIGHT:
-                paddle.move_right()
+        # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
+        screen.update()
+        time.sleep(0.01)
+        ball.move()
 
-            # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
-            screen.update()
-            time.sleep(0.01)
-            ball.move()
+        # DETECTING COLLISION WITH WALLS
+        check_collision_with_walls()
+        if check_collision_with_bottom_wall():
+            reward += -100
+            agent.success_history.append(0)
 
-            # DETECTING COLLISION WITH WALLS
-            check_collision_with_walls()
-            if check_collision_with_bottom_wall():
-                reward += -100
-                agent.success_history.append(0)
+        # DETECTING COLLISION WITH THE PADDLE
+        check_collision_with_paddle()
 
-            # DETECTING COLLISION WITH THE PADDLE
-            check_collision_with_paddle()
+        # DETECTING COLLISION WITH A BRICK
+        if check_collision_with_bricks():
+            # get reward for breaking the brick
+            reward += 1
 
-            # DETECTING COLLISION WITH A BRICK
-            if check_collision_with_bricks():
-                # get reward for breaking the brick
-                reward += 1
+        # DETECTING USER'S VICTORY
+        if len(bricks.bricks) == 0:
+            ui.game_over(win=True)
+            playing_game = False
+            reward += 100
+            agent.success_history.append(1)
 
-            # DETECTING USER'S VICTORY
-            if len(bricks.bricks) == 0:
-                ui.game_over(win=True)
-                playing_game = False
-                reward += 100
-                agent.success_history.append(1)
+        agent.reward_history[agent.num_games] += reward
 
-            agent.reward_history[agent.num_games] += reward
-
-            # update Q-values
-            next_state = agent.get_state(ball, paddle, bricks)
-            agent.update_q_value(state, action, next_state, reward)
-
-        else:
-            ui.paused_status()
+        # update Q-values
+        next_state = agent.get_state(ball, paddle, bricks)
+        agent.update_q_value(state, action, next_state, reward)
 
     # check if the agent won the game
     if len(bricks.bricks) == 0:
@@ -225,9 +216,15 @@ while True:
         ui.game_over(win=False)
         # agent lost the game, start over
 
+    agent.increase_num_games()
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
 
-    # train the agent for the next game
-    agent.train()
+
+print("Agent finished training")
+print("Saving q values to file q_values.txt...")
+ui.saving_q_values()
+screen.update()
+agent.save_q_values()
+print("Done")

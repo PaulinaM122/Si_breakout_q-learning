@@ -74,9 +74,8 @@ class QLearningAgent:
         # funkcja zwracająca maksymalną liczbę gier do rozegrania
         return self.max_num_games
 
-    def train(self):
-        # funkcja trenująca agenta na kolejnej grze
-        # TODO: trzeba dokończyć
+    def increase_num_games(self):
+        # funkcja inkrementująca liczbę rozgrywek wykonanych przez agenta
         self.num_games += 1
 
     def evaluate(self):
@@ -84,3 +83,13 @@ class QLearningAgent:
         success_rate = sum(self.success_history) / self.num_games
         avg_reward = sum(self.reward_history) / self.num_games
         return success_rate, avg_reward
+
+    def save_q_values(self):
+        # funkcja zapisująca wartości wytrenowanych q_values do pliku q_values.txt
+        # TODO: zapisać do pliku, żeby można było go było późńiej trenować od tych wartości
+        pass
+
+    def load_q_values(self):
+        # funkcja wczytująca wartości wytrenowanych q_values z pliku q_values.txt
+        # TODO: wczytanie z pliku q_values
+        pass

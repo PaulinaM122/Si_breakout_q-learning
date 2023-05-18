@@ -1,4 +1,3 @@
-import time
 from turtle import Turtle
 import random
 
@@ -26,19 +25,11 @@ class UI(Turtle):
         self.clear()
         self.goto(x=0, y=-150)
         self.write('Breakout', align=ALIGNMENT, font=FONT)
-        self.goto(x=0, y=-180)
-        self.write('Press Space to PAUSE or RESUME the Game',
-                   align=ALIGNMENT, font=('Calibri', 14, 'normal'))
 
     def change_color(self):
         self.clear()
         self.color(random.choice(COLOR_LIST))
         self.header()
-
-    def paused_status(self):
-        self.clear()
-        self.change_color()
-        time.sleep(0.5)
 
     def game_over(self, win):
         self.clear()
@@ -46,3 +37,8 @@ class UI(Turtle):
             self.write('You Cleared the Game!', align='center', font=FONT)
         else:
             self.write("Game is Over", align='center', font=FONT)
+
+    def saving_q_values(self):
+        self.goto(x=0, y=-180)
+        self.write('Saving q values to file q_values.txt...',
+                   align=ALIGNMENT, font=('Calibri', 14, 'normal'))

@@ -42,15 +42,14 @@ class Bricks:
             self.create_lane(i)
 
     def get_state(self):
-        # TODO: tu pewnie trzeba będzie zwracać jakąś, które bricki zostały do zbicia, ale to się okaże jak będziemy trenować agenta, bo nie wiemy czego on potrzebuje
-        return len(self.bricks)  # próbowałam zwracać listę współrzędnych cegieł, ale nie można się nią odwołać do q_values, więc trzeba będzie to zrobić jakoś inaczej
+        return len(self.bricks)
 
     def reset(self):
-        # usuń wszystkie klocki
+        # remove all bricks
         for brick in self.bricks:
             brick.clear()
             brick.hideturtle()
         self.bricks = []
 
-        # utwórz klocki ponownie
+        # create bricks again
         self.create_all_lanes()
