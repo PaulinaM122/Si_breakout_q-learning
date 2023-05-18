@@ -45,7 +45,18 @@ class QLearningAgent:
     def get_best_action(self, state):
         # funkcja zwracająca najlepszą akcję dla danego stanu
         possible_actions = self.get_possible_actions(state)
-        return max(possible_actions, key=lambda action: self.get_q_value(state, action)) # nie działa bo nie jest dokończone get_q_value
+
+        if not possible_actions:
+            return None
+
+        # Sprawdź czy wszystkie wartości dla danego stanu są równe 0
+        all_zero_values = all(self.get_q_value(state, action) == 0 for action in possible_actions)
+
+        if all_zero_values:
+            # Jeśli wszystkie wartości są równe 0, wylosuj jeden ruch
+            return random.choice(possible_actions)
+        else:
+            return max(possible_actions, key=lambda action: self.get_q_value(state, action))
 
     def get_action(self, state):
         # funkcja zwracająca akcję dla danego stanu
