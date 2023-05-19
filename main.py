@@ -8,6 +8,7 @@ from ui import UI
 from bricks import Bricks
 from Direction import Direction as Dir
 import time
+import utilities
 
 screen = tr.Screen()
 screen.setup(width=1200, height=600)
@@ -34,10 +35,14 @@ def leave_game():
     training_agent = False
 
 
+# create Q-learning agent
+agent = QLearningAgent()
+
 screen.listen()
 screen.onkey(key='Left', fun=paddle.move_left)
 screen.onkey(key='Right', fun=paddle.move_right)
 screen.onkey(key='Escape', fun=leave_game)
+screen.onkey(key='l', fun=agent.load_q_values)
 
 
 def check_collision_with_walls():
@@ -152,9 +157,6 @@ def check_collision_with_bricks():
 
     return collided
 
-
-# create Q-learning agent
-agent = QLearningAgent()
 
 while training_agent:
 

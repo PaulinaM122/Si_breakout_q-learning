@@ -1,4 +1,7 @@
 import random
+import json
+
+import utilities
 from Direction import Direction as Dir
 
 
@@ -9,7 +12,7 @@ class QLearningAgent:
         self.epsilon = epsilon  # współczynnik eksploracji
         self.q_values = {}  # słownik przechowujący wartości Q-funkcji dla każdego stanu i akcji
         self.num_games = 0  # licznik gier
-        self.max_num_games = 10000  # maksymalna liczba gier do rozegrania
+        self.max_num_games = 1000  # maksymalna liczba gier do rozegrania
         self.reward_history = [0] * self.max_num_games
         self.success_history = []
 
@@ -80,14 +83,15 @@ class QLearningAgent:
 
     def evaluate(self):
         # TODO: możemy tu dać np obliczanie średnich, żeby zobaczyć, jak zmienić parametry w treningu i na koniec do tworzenia staystyk/wykresów
-        success_rate = sum(self.success_history) / self.num_games
+        success_rate = sum(self.success_history) / (self.num_games * 3)
         avg_reward = sum(self.reward_history) / self.num_games
         return success_rate, avg_reward
 
     def save_q_values(self):
         # funkcja zapisująca wartości wytrenowanych q_values do pliku q_values.txt
         # TODO: zapisać do pliku, żeby można było go było późńiej trenować od tych wartości
-        pass
+        with open('q_values.txt', 'w') as file:
+            file.write(json.dumps(utilities.map_dict_to_str(self.q_values), indent=0))
 
     def load_q_values(self):
         # funkcja wczytująca wartości wytrenowanych q_values z pliku q_values.txt
