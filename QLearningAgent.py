@@ -94,5 +94,6 @@ class QLearningAgent:
 
     def load_q_values(self):
         # funkcja wczytująca wartości wytrenowanych q_values z pliku q_values.txt
-        # TODO: wczytanie z pliku q_values
-        pass
+        with open('q_values.txt', 'r') as file:
+            q_values_str = file.read()
+            self.q_values = utilities.map_str_to_dict(json.loads(q_values_str))
