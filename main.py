@@ -8,6 +8,7 @@ from ui import UI
 from bricks import Bricks
 from Direction import Direction as Dir
 import time
+import utilities
 
 screen = tr.Screen()
 screen.setup(width=590, height=600)
@@ -27,22 +28,25 @@ ball = Ball()
 BALL_RADIOUS = 5
 PADDLE_WIDTH = 220
 
-game_paused = False
+
 playing_game = True
+training_agent = True
 
 
-def pause_game():
-    global game_paused
-    if game_paused:
-        game_paused = False
-    else:
-        game_paused = True
+def leave_game():
+    global playing_game, training_agent
+    playing_game = False
+    training_agent = False
 
+
+# create Q-learning agent
+agent = QLearningAgent()
 
 screen.listen()
 screen.onkey(key='Left', fun=paddle.move_left)
 screen.onkey(key='Right', fun=paddle.move_right)
-screen.onkey(key='space', fun=pause_game)
+screen.onkey(key='Escape', fun=leave_game)
+screen.onkey(key='l', fun=agent.load_q_values)
 
 
 def check_collision_with_walls():
@@ -127,7 +131,7 @@ def check_collision_with_paddle():
     # from paddle(from its middle) is less than
     # width of paddle and ball is below a certain
     # coordinate to detect their collision
-    if ball.distance(paddle) < (110 + BALL_RADIOUS) and ball.ycor() < -250:
+    if ball.distance(paddle) < (PADDLE_WIDTH/2 + BALL_RADIOUS) and ball.ycor() < -250:
 
         # If Paddle is on Right of Screen
         if paddle_x > 0:
@@ -199,10 +203,7 @@ def check_collision_with_bricks():
     return collided
 
 
-# create Q-learning agent
-agent = QLearningAgent()
-
-while True:
+while training_agent:
     # reset the game
     score.lives = 3
     bricks.reset()
@@ -213,8 +214,6 @@ while True:
 
     # start a new game
     while playing_game:
-        if not game_paused:
-
             reward = 0
             state = agent.get_state(ball, paddle, bricks)
             action = agent.get_action(state)
@@ -227,6 +226,7 @@ while True:
                 if not check_collision_with_paddle_right():
                     paddle.move_right()
 
+
             # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
             screen.update()
             time.sleep(0.01)
@@ -236,6 +236,7 @@ while True:
             check_collision_with_walls()
             if check_collision_with_bottom_wall():
                 reward += -100
+                agent.success_history.append(0)
 
             # DETECTING COLLISION WITH THE PADDLE
             if check_collision_with_paddle():
@@ -251,6 +252,11 @@ while True:
                 ui.game_over(win=True)
                 playing_game = False
                 reward += 100
+                agent.success_history.append(1)
+                agent.reward_history[agent.num_games] += reward
+
+            if action == Dir.STAY:
+                reward += 10
 
             # update Q-values
             next_state = agent.get_state(ball, paddle, bricks)
@@ -271,11 +277,15 @@ while True:
     else:
         ui.game_over(win=False)
         # agent lost the game, start over
-        continue
 
+    agent.increase_num_games()
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
 
-    # train the agent for the next game
-    agent.train()
+    print("Agent finished training")
+    print("Saving q values to file q_values.txt...")
+    ui.saving_q_values()
+    screen.update()
+    agent.save_q_values()
+    print("Done")

@@ -30,7 +30,7 @@ class Scoreboard(Turtle):
         self.goto(x=-280, y=260)
         self.lives = lives
         self.score = 0
-        self.game_number = 0
+        self.game_number = game_number
         self.update_score()
 
     def update_score(self):
