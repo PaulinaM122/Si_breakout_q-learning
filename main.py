@@ -47,7 +47,7 @@ screen.onkey(key='Left', fun=paddle.move_left)
 screen.onkey(key='Right', fun=paddle.move_right)
 screen.onkey(key='Escape', fun=leave_game)
 screen.onkey(key='l', fun=agent.load_q_values)
-
+agent.load_q_values()
 
 def check_collision_with_walls():
     global ball
