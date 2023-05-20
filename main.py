@@ -8,10 +8,9 @@ from ui import UI
 from bricks import Bricks
 from Direction import Direction as Dir
 import time
-import utilities
 
 screen = tr.Screen()
-screen.setup(width=1200, height=600)
+screen.setup(width=590, height=600)
 screen.bgcolor('black')
 screen.title('Breakout')
 screen.tracer(0)
@@ -25,31 +24,32 @@ bricks = Bricks()
 
 ball = Ball()
 
+BALL_RADIOUS = 5
+PADDLE_WIDTH = 220
+
+game_paused = False
 playing_game = True
-training_agent = True
 
 
-def leave_game():
-    global playing_game, training_agent
-    playing_game = False
-    training_agent = False
+def pause_game():
+    global game_paused
+    if game_paused:
+        game_paused = False
+    else:
+        game_paused = True
 
-
-# create Q-learning agent
-agent = QLearningAgent()
 
 screen.listen()
 screen.onkey(key='Left', fun=paddle.move_left)
 screen.onkey(key='Right', fun=paddle.move_right)
-screen.onkey(key='Escape', fun=leave_game)
-screen.onkey(key='l', fun=agent.load_q_values)
+screen.onkey(key='space', fun=pause_game)
 
 
 def check_collision_with_walls():
     global ball
 
     # detect collision with left and right walls:
-    if ball.xcor() < -580 or ball.xcor() > 570:
+    if ball.xcor() < -275 or ball.xcor() > 265:
         ball.bounce(x_bounce=True, y_bounce=False)
         return
 
@@ -64,15 +64,56 @@ def check_collision_with_bottom_wall():
 
     # In this case, user failed to hit the ball
     # thus he loses. The game resets.
-    if ball.ycor() < -280:
+    if ball.ycor() <= -280:
         ball.reset()
         score.decrease_lives()
         if score.lives == 0:
+            score.increase_game()
             score.reset()
             playing_game = False
             ui.game_over(win=False)
         ui.change_color()
         return True
+    return False
+
+
+def check_collision_with_paddle_left():
+    paddle_left_edge = paddle.xcor() - PADDLE_WIDTH / 2
+    paddle_top_edge = paddle.ycor() + BALL_RADIOUS
+    paddle_bottom_edge = paddle.ycor() - BALL_RADIOUS
+
+    ball_x, ball_y = ball.next_move()
+    ball_right_edge = ball_x + BALL_RADIOUS
+    ball_top_edge = ball_y + BALL_RADIOUS
+    ball_bottom_edge = ball_y - BALL_RADIOUS
+
+    if (
+        ball_right_edge >= paddle_left_edge and
+        ball_top_edge <= paddle_top_edge and
+        ball_bottom_edge >= paddle_bottom_edge
+    ):
+        return True
+
+    return False
+
+
+def check_collision_with_paddle_right():
+    paddle_right_edge = paddle.xcor() + PADDLE_WIDTH / 2
+    paddle_top_edge = paddle.ycor() + BALL_RADIOUS
+    paddle_bottom_edge = paddle.ycor() - BALL_RADIOUS
+
+    ball_x, ball_y = ball.next_move()
+    ball_left_edge = ball_x - BALL_RADIOUS
+    ball_top_edge = ball_y + BALL_RADIOUS
+    ball_bottom_edge = ball_y - BALL_RADIOUS
+
+    if (
+        ball_left_edge <= paddle_right_edge and
+        ball_top_edge <= paddle_top_edge and
+        ball_bottom_edge >= paddle_bottom_edge
+    ):
+        return True
+
     return False
 
 
@@ -86,7 +127,7 @@ def check_collision_with_paddle():
     # from paddle(from its middle) is less than
     # width of paddle and ball is below a certain
     # coordinate to detect their collision
-    if ball.distance(paddle) < 110 and ball.ycor() < -250:
+    if ball.distance(paddle) < (110 + BALL_RADIOUS) and ball.ycor() < -250:
 
         # If Paddle is on Right of Screen
         if paddle_x > 0:
@@ -158,58 +199,71 @@ def check_collision_with_bricks():
     return collided
 
 
-while training_agent:
+# create Q-learning agent
+agent = QLearningAgent()
 
+while True:
     # reset the game
     score.lives = 3
     bricks.reset()
     ball.reset()
     paddle.goto(x=0, y=-280)
+    game_paused = False
     playing_game = True
 
     # start a new game
     while playing_game:
-        reward = 0
-        state = agent.get_state(ball, paddle, bricks)
-        action = agent.get_action(state)
+        if not game_paused:
 
-        # perform action
-        if action == Dir.LEFT:
-            paddle.move_left()
-        elif action == Dir.RIGHT:
-            paddle.move_right()
+            reward = 0
+            state = agent.get_state(ball, paddle, bricks)
+            action = agent.get_action(state)
 
-        # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
-        screen.update()
-        time.sleep(0.01)
-        ball.move()
+            # perform action
+            if action == Dir.LEFT:
+                if not check_collision_with_paddle_left():
+                    paddle.move_left()
+            elif action == Dir.RIGHT:
+                if not check_collision_with_paddle_right():
+                    paddle.move_right()
 
-        # DETECTING COLLISION WITH WALLS
-        check_collision_with_walls()
-        if check_collision_with_bottom_wall():
-            reward += -100
-            agent.success_history.append(0)
+            # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
+            screen.update()
+            time.sleep(0.01)
+            ball.move()
 
-        # DETECTING COLLISION WITH THE PADDLE
-        check_collision_with_paddle()
+            # DETECTING COLLISION WITH WALLS
+            check_collision_with_walls()
+            if check_collision_with_bottom_wall():
+                reward += -100
 
-        # DETECTING COLLISION WITH A BRICK
-        if check_collision_with_bricks():
-            # get reward for breaking the brick
-            reward += 1
+            # DETECTING COLLISION WITH THE PADDLE
+            if check_collision_with_paddle():
+                reward += 30
 
-        # DETECTING USER'S VICTORY
-        if len(bricks.bricks) == 0:
-            ui.game_over(win=True)
-            playing_game = False
-            reward += 100
-            agent.success_history.append(1)
+            # DETECTING COLLISION WITH A BRICK
+            if check_collision_with_bricks():
+                # get reward for breaking the brick
+                reward += 1
 
-        agent.reward_history[agent.num_games] += reward
+            # DETECTING USER'S VICTORY
+            if len(bricks.bricks) == 0:
+                ui.game_over(win=True)
+                playing_game = False
+                reward += 100
 
-        # update Q-values
-        next_state = agent.get_state(ball, paddle, bricks)
-        agent.update_q_value(state, action, next_state, reward)
+            # update Q-values
+            next_state = agent.get_state(ball, paddle, bricks)
+            agent.update_q_value(state, action, next_state, reward)
+
+            # Ball reset if error
+            if(
+                    ball.xcor() > 350 or
+                    ball.xcor() < -350 or
+                    ball.ycor() < -350 or
+                    ball.ycor() > 350
+            ):
+                ball.reset()
 
     # check if the agent won the game
     if len(bricks.bricks) == 0:
@@ -217,16 +271,11 @@ while training_agent:
     else:
         ui.game_over(win=False)
         # agent lost the game, start over
+        continue
 
-    agent.increase_num_games()
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
 
-
-print("Agent finished training")
-print("Saving q values to file q_values.txt...")
-ui.saving_q_values()
-screen.update()
-agent.save_q_values()
-print("Done")
+    # train the agent for the next game
+    agent.train()

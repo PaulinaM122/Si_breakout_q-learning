@@ -1,7 +1,4 @@
 import random
-import json
-
-import utilities
 from Direction import Direction as Dir
 
 
@@ -12,9 +9,7 @@ class QLearningAgent:
         self.epsilon = epsilon  # współczynnik eksploracji
         self.q_values = {}  # słownik przechowujący wartości Q-funkcji dla każdego stanu i akcji
         self.num_games = 0  # licznik gier
-        self.max_num_games = 1000  # maksymalna liczba gier do rozegrania
-        self.reward_history = [0] * self.max_num_games
-        self.success_history = []
+        self.max_num_games = 10000  # maksymalna liczba gier do rozegrania
 
     def get_state(self, ball, paddle, bricks):
         return ball.pos(), paddle.pos(), bricks.get_state()
@@ -38,9 +33,9 @@ class QLearningAgent:
         # funkcja zwracająca możliwe akcje dla danego stanu
         # paletka nie może wychodzić poza obszar gry
         paddle_position = state[1]
-        if paddle_position[0] > -420 and paddle_position[0] < 420:
+        if paddle_position[0] > -210 and paddle_position[0] < 210:
             return [Dir.LEFT, Dir.RIGHT, Dir.STAY]
-        elif paddle_position[0] <= -420:
+        elif paddle_position[0] <= -210:
             return [Dir.RIGHT, Dir.STAY]
         else:
             return [Dir.LEFT, Dir.STAY]
@@ -77,23 +72,6 @@ class QLearningAgent:
         # funkcja zwracająca maksymalną liczbę gier do rozegrania
         return self.max_num_games
 
-    def increase_num_games(self):
-        # funkcja inkrementująca liczbę rozgrywek wykonanych przez agenta
+    def train(self):
+        # funkcja trenująca agenta na kolejnej grze
         self.num_games += 1
-
-    def evaluate(self):
-        # TODO: możemy tu dać np obliczanie średnich, żeby zobaczyć, jak zmienić parametry w treningu i na koniec do tworzenia staystyk/wykresów
-        success_rate = sum(self.success_history) / (self.num_games * 3)
-        avg_reward = sum(self.reward_history) / self.num_games
-        return success_rate, avg_reward
-
-    def save_q_values(self):
-        # funkcja zapisująca wartości wytrenowanych q_values do pliku q_values.txt
-        # TODO: zapisać do pliku, żeby można było go było późńiej trenować od tych wartości
-        with open('q_values.txt', 'w') as file:
-            file.write(json.dumps(utilities.map_dict_to_str(self.q_values), indent=0))
-
-    def load_q_values(self):
-        # funkcja wczytująca wartości wytrenowanych q_values z pliku q_values.txt
-        # TODO: wczytanie z pliku q_values
-        pass

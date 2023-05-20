@@ -27,13 +27,13 @@ class Brick(Turtle):
 
 class Bricks:
     def __init__(self):
-        self.y_start = 0
+        self.y_start = 120
         self.y_end = 240
         self.bricks = []
         self.create_all_lanes()
 
     def create_lane(self, y_cor):
-        for i in range(-570, 570, 63):
+        for i in range(-260, 270, 63):
             brick = Brick(i, y_cor)
             self.bricks.append(brick)
 
