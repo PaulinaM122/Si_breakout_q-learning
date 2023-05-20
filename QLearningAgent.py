@@ -88,7 +88,6 @@ class QLearningAgent:
 
     def save_q_values(self):
         # funkcja zapisująca wartości wytrenowanych q_values do pliku q_values.txt
-        # TODO: zapisać do pliku, żeby można było go było późńiej trenować od tych wartości
         with open('q_values.txt', 'w') as file:
             file.write(json.dumps(utilities.map_dict_to_str(self.q_values), indent=0))
 
@@ -97,3 +96,7 @@ class QLearningAgent:
         with open('q_values.txt', 'r') as file:
             q_values_str = file.read()
             self.q_values = utilities.map_str_to_dict(json.loads(q_values_str))
+
+
+    def change_epsilon(self):
+        self.epsilon = 0.9

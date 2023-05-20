@@ -59,7 +59,7 @@ def check_collision_with_walls():
 
     # detect collision with upper wall
     if ball.ycor() > 270:
-        ball.bounce(x_bounce=False, y_bounce=True)
+        ball.bounce_upper_wall(x_bounce=False, y_bounce=True)
         return
 
 
@@ -68,7 +68,7 @@ def check_collision_with_bottom_wall():
 
     # In this case, user failed to hit the ball
     # thus he loses. The game resets.
-    if ball.ycor() <= -280:
+    if ball.ycor() < -280:
         ball.reset()
         score.decrease_lives()
         if score.lives == 0:
@@ -125,7 +125,8 @@ def check_collision_with_paddle():
     global ball, paddle
     # record x-axis coordinates of ball and paddle
     paddle_x = paddle.xcor()
-    ball_x = ball.xcor()
+    #ball_x = ball.xcor()
+    ball_x, ball_y = ball.next_move()
 
     # check if ball's distance(from its middle)
     # from paddle(from its middle) is less than
@@ -138,10 +139,10 @@ def check_collision_with_paddle():
             if ball_x > paddle_x:
                 # If ball hits paddles left side it
                 # should go back to left
-                ball.bounce(x_bounce=True, y_bounce=True)
+                ball.bounce_paddle(x_bounce=True, y_bounce=True)
                 return
             else:
-                ball.bounce(x_bounce=False, y_bounce=True)
+                ball.bounce_paddle(x_bounce=False, y_bounce=True)
                 return
 
         # If Paddle is left of Screen
@@ -149,22 +150,22 @@ def check_collision_with_paddle():
             if ball_x < paddle_x:
                 # If ball hits paddles left side it
                 # should go back to left
-                ball.bounce(x_bounce=True, y_bounce=True)
+                ball.bounce_paddle(x_bounce=True, y_bounce=True)
                 return
             else:
-                ball.bounce(x_bounce=False, y_bounce=True)
+                ball.bounce_paddle(x_bounce=False, y_bounce=True)
                 return
 
         # Else Paddle is in the Middle horizontally
         else:
             if ball_x > paddle_x:
-                ball.bounce(x_bounce=True, y_bounce=True)
+                ball.bounce_paddle(x_bounce=True, y_bounce=True)
                 return
             elif ball_x < paddle_x:
-                ball.bounce(x_bounce=True, y_bounce=True)
+                ball.bounce_paddle(x_bounce=True, y_bounce=True)
                 return
             else:
-                ball.bounce(x_bounce=False, y_bounce=True)
+                ball.bounce_paddle(x_bounce=False, y_bounce=True)
                 return
 
 
@@ -274,6 +275,8 @@ while training_agent:
     # check if the agent won the game
     if len(bricks.bricks) == 0:
         ui.game_over(win=True)
+        # change from exploration to exploitation
+        agent.change_epsilon()
     else:
         ui.game_over(win=False)
         # agent lost the game, start over
