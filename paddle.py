@@ -13,7 +13,9 @@ class Paddle(Turtle):
         self.goto(x=0, y=-280)
 
     def move_left(self):
-        self.backward(MOVE_DIST)
+        if self.xcor() > -590/2 + 120:
+            self.backward(MOVE_DIST)
 
     def move_right(self):
-        self.forward(MOVE_DIST)
+        if self.xcor() < 590/2 - 120:
+            self.forward(MOVE_DIST)
