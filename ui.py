@@ -41,5 +41,5 @@ class UI(Turtle):
 
     def saving_q_values(self):
         self.goto(x=0, y=-180)
-        self.write('Saving q values to file q_values.txt...',
+        self.write('Saving q values to a file...',
                    align=ALIGNMENT, font=('Calibri', 14, 'normal'))

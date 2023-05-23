@@ -25,9 +25,8 @@ bricks = Bricks()
 
 ball = Ball()
 
-BALL_RADIOUS = 5
+BALL_RADIUS = 5
 PADDLE_WIDTH = 220
-
 
 playing_game = True
 training_agent = True
@@ -49,16 +48,17 @@ screen.onkey(key='Escape', fun=leave_game)
 screen.onkey(key='l', fun=agent.load_q_values)
 agent.load_q_values()
 
+
 def check_collision_with_walls():
     global ball
 
     # detect collision with left and right walls:
-    if ball.xcor() < -275 or ball.xcor() > 265:
+    if ball.xcor() < -275 and ball.x_move_dist < 0 or ball.xcor() > 265 and ball.x_move_dist > 0:
         ball.bounce(x_bounce=True, y_bounce=False)
         return
 
     # detect collision with upper wall
-    if ball.ycor() > 270:
+    if ball.ycor() > 270 and ball.y_move_dist > 0:
         ball.bounce_upper_wall(x_bounce=False, y_bounce=True)
         return
 
@@ -83,18 +83,18 @@ def check_collision_with_bottom_wall():
 
 def check_collision_with_paddle_left():
     paddle_left_edge = paddle.xcor() - PADDLE_WIDTH / 2
-    paddle_top_edge = paddle.ycor() + BALL_RADIOUS
-    paddle_bottom_edge = paddle.ycor() - BALL_RADIOUS
+    paddle_top_edge = paddle.ycor() + BALL_RADIUS
+    paddle_bottom_edge = paddle.ycor() - BALL_RADIUS
 
     ball_x, ball_y = ball.next_move()
-    ball_right_edge = ball_x + BALL_RADIOUS
-    ball_top_edge = ball_y + BALL_RADIOUS
-    ball_bottom_edge = ball_y - BALL_RADIOUS
+    ball_right_edge = ball_x + BALL_RADIUS
+    ball_top_edge = ball_y + BALL_RADIUS
+    ball_bottom_edge = ball_y - BALL_RADIUS
 
     if (
-        ball_right_edge >= paddle_left_edge and
-        ball_top_edge <= paddle_top_edge and
-        ball_bottom_edge >= paddle_bottom_edge
+            ball_right_edge >= paddle_left_edge and
+            ball_top_edge <= paddle_top_edge and
+            ball_bottom_edge >= paddle_bottom_edge
     ):
         return True
 
@@ -103,18 +103,18 @@ def check_collision_with_paddle_left():
 
 def check_collision_with_paddle_right():
     paddle_right_edge = paddle.xcor() + PADDLE_WIDTH / 2
-    paddle_top_edge = paddle.ycor() + BALL_RADIOUS
-    paddle_bottom_edge = paddle.ycor() - BALL_RADIOUS
+    paddle_top_edge = paddle.ycor() + BALL_RADIUS
+    paddle_bottom_edge = paddle.ycor() - BALL_RADIUS
 
     ball_x, ball_y = ball.next_move()
-    ball_left_edge = ball_x - BALL_RADIOUS
-    ball_top_edge = ball_y + BALL_RADIOUS
-    ball_bottom_edge = ball_y - BALL_RADIOUS
+    ball_left_edge = ball_x - BALL_RADIUS
+    ball_top_edge = ball_y + BALL_RADIUS
+    ball_bottom_edge = ball_y - BALL_RADIUS
 
     if (
-        ball_left_edge <= paddle_right_edge and
-        ball_top_edge <= paddle_top_edge and
-        ball_bottom_edge >= paddle_bottom_edge
+            ball_left_edge <= paddle_right_edge and
+            ball_top_edge <= paddle_top_edge and
+            ball_bottom_edge >= paddle_bottom_edge
     ):
         return True
 
@@ -125,14 +125,14 @@ def check_collision_with_paddle():
     global ball, paddle
     # record x-axis coordinates of ball and paddle
     paddle_x = paddle.xcor()
-    #ball_x = ball.xcor()
+    # ball_x = ball.xcor()
     ball_x, ball_y = ball.next_move()
 
     # check if ball's distance(from its middle)
     # from paddle(from its middle) is less than
     # width of paddle and ball is below a certain
     # coordinate to detect their collision
-    if ball.distance(paddle) < (PADDLE_WIDTH/2 + BALL_RADIOUS) and ball.ycor() < -250:
+    if ball.distance(paddle) < (PADDLE_WIDTH / 2 + BALL_RADIUS) and ball.ycor() < -250:
 
         # If Paddle is on Right of Screen
         if paddle_x > 0:
@@ -171,7 +171,6 @@ def check_collision_with_paddle():
 
 def check_collision_with_bricks():
     # returns True/False
-    # TODO: tu jest zdecydowanie coś źle z tym sprawdzaniem, bo czasem zbija dużo po skosie, ale możemy tak zostawić xd
     global ball, score, bricks
     collided = False
 
@@ -210,67 +209,65 @@ while training_agent:
     bricks.reset()
     ball.reset()
     paddle.goto(x=0, y=-280)
-    game_paused = False
     playing_game = True
 
     # start a new game
     while playing_game:
-            reward = 0
-            state = agent.get_state(ball, paddle, bricks)
-            action = agent.get_action(state)
+        reward = 0
+        ball.move()
+        state = agent.get_state(ball, paddle, bricks)
+        action = agent.get_action(state)
 
-            # perform action
-            if action == Dir.LEFT:
-                if not check_collision_with_paddle_left():
-                    paddle.move_left()
-            elif action == Dir.RIGHT:
-                if not check_collision_with_paddle_right():
-                    paddle.move_right()
+        # perform action
+        if action == Dir.LEFT:
+            if not check_collision_with_paddle_left():
+                paddle.move_left()
+        elif action == Dir.RIGHT:
+            if not check_collision_with_paddle_right():
+                paddle.move_right()
 
+        # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
+        screen.update()
+        time.sleep(0.01)
 
-            # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
-            screen.update()
-            time.sleep(0.01)
-            ball.move()
+        # DETECTING COLLISION WITH WALLS
+        check_collision_with_walls()
+        if check_collision_with_bottom_wall():
+            reward += -100
+            agent.success_history.append(0)
 
-            # DETECTING COLLISION WITH WALLS
-            check_collision_with_walls()
-            if check_collision_with_bottom_wall():
-                reward += -100
-                agent.success_history.append(0)
+        # DETECTING COLLISION WITH THE PADDLE
+        if check_collision_with_paddle():
+            reward += 30
 
-            # DETECTING COLLISION WITH THE PADDLE
-            if check_collision_with_paddle():
-                reward += 30
+        # DETECTING COLLISION WITH A BRICK
+        if check_collision_with_bricks():
+            # get reward for breaking the brick
+            reward += 1
 
-            # DETECTING COLLISION WITH A BRICK
-            if check_collision_with_bricks():
-                # get reward for breaking the brick
-                reward += 1
+        # DETECTING USER'S VICTORY
+        if len(bricks.bricks) == 0:
+            ui.game_over(win=True)
+            playing_game = False
+            reward += 100
+            agent.success_history.append(1)
+            agent.reward_history[agent.num_games] += reward
 
-            # DETECTING USER'S VICTORY
-            if len(bricks.bricks) == 0:
-                ui.game_over(win=True)
-                playing_game = False
-                reward += 100
-                agent.success_history.append(1)
-                agent.reward_history[agent.num_games] += reward
+        if action == Dir.STAY:
+            reward += 10
 
-            if action == Dir.STAY:
-                reward += 10
+        # update Q-values
+        next_state = agent.get_state(ball, paddle, bricks)
+        agent.update_q_value(state, action, next_state, reward)
 
-            # update Q-values
-            next_state = agent.get_state(ball, paddle, bricks)
-            agent.update_q_value(state, action, next_state, reward)
-
-            # Ball reset if error
-            if(
-                    ball.xcor() > 350 or
-                    ball.xcor() < -350 or
-                    ball.ycor() < -350 or
-                    ball.ycor() > 350
-            ):
-                ball.reset()
+        # Ball reset if error
+        if (
+                ball.xcor() > 350 or
+                ball.xcor() < -350 or
+                ball.ycor() < -350 or
+                ball.ycor() > 350
+        ):
+            ball.reset()
 
     # check if the agent won the game
     if len(bricks.bricks) == 0:
@@ -281,14 +278,11 @@ while training_agent:
         ui.game_over(win=False)
         # agent lost the game, start over
 
+    ui.saving_q_values()
+    screen.update()
+    agent.save_q_values()
+
     agent.increase_num_games()
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
-
-    print("Agent finished training")
-    print("Saving q values to file q_values.txt...")
-    ui.saving_q_values()
-    screen.update()
-    agent.save_q_values()
-    print("Done")
