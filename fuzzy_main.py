@@ -223,9 +223,9 @@ while training_agent:
         next_action = agent.get_action()
 
         # perform action
-        if next_action == Dir.LEFT.value:
+        if next_action == Dir.LEFT.value and ball.xcor() > -200:
             paddle.move_left()
-        elif next_action == Dir.RIGHT.value:
+        elif next_action == Dir.RIGHT.value and ball.xcor() < 200:
             paddle.move_right()
 
         # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
