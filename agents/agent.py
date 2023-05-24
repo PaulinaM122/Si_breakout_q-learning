@@ -1,10 +1,11 @@
 import abc
+from globals.constants import *
 
 
 class Agent(abc.ABC):
     def __init__(self):
         self.num_games = 0  # licznik gier
-        self.max_num_games = 1000  # maksymalna liczba gier do rozegrania
+        self.max_num_games = MAX_NUM_GAMES  # maksymalna liczba gier do rozegrania
         self.reward_history = [0] * self.max_num_games
         self.success_history = []
 

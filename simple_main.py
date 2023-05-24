@@ -1,17 +1,19 @@
 import turtle as tr
-
-from QLearningSimpleAgent import QLearningSimpleAgent
-from paddle import Paddle
-from ball import Ball
-from scoreboard import Scoreboard
-from ui import UI
-from bricks import Bricks
-from Direction import Direction as Dir
+from items.paddle import Paddle
+from items.ball import Ball
+from view.scoreboard import Scoreboard
+from view.ui import UI
+from items.bricks import Bricks
+from agents.simple_agent import SimpleAgent
+from globals.direction import Direction as Dir
+from globals.constants import *
 import time
-import utilities
+
+width = SCREEN_WIDTH_BIG
+height = SCREEN_HEIGHT
 
 screen = tr.Screen()
-screen.setup(width=1200, height=600)
+screen.setup(width=width, height=height)
 screen.bgcolor('black')
 screen.title('Breakout')
 screen.tracer(0)
@@ -21,52 +23,41 @@ ui.header()
 
 score = Scoreboard(lives=3)
 paddle = Paddle()
-bricks = Bricks(screen_width=1200)
+bricks = Bricks(screen_width=width)
 
 ball = Ball()
 
 playing_game = True
 training_agent = True
 
-
-def leave_game():
-    global playing_game, training_agent
-    playing_game = False
-    training_agent = False
-
-
 # create Q-learning agent
-agent = QLearningSimpleAgent()
-
-screen.listen()
-screen.onkey(key='Left', fun=paddle.move_left)
-screen.onkey(key='Right', fun=paddle.move_right)
-screen.onkey(key='Escape', fun=leave_game)
-screen.onkey(key='l', fun=agent.load_q_values)
-
+agent = SimpleAgent()
 agent.load_q_values()
 
 
 def check_collision_with_walls():
-    global ball
+    global width, height, ball
 
     # detect collision with left and right walls:
-    if ball.xcor() < -590 and ball.x_move_dist < 0 or ball.xcor() > 590 and ball.x_move_dist > 0:
+    edge = width/2 - BALL_DIAMETER
+
+    if ball.xcor() < -edge and ball.x_move_dist < 0 or ball.xcor() > edge and ball.x_move_dist > 0:
         ball.bounce(x_bounce=True, y_bounce=False)
         return
 
     # detect collision with upper wall
-    if ball.ycor() > 270 and ball.y_move_dist > 0:
+    ceiling = height/2 - BALL_DIAMETER
+    if ball.ycor() > ceiling and ball.y_move_dist > 0:
         ball.bounce_upper_wall(x_bounce=False, y_bounce=True)
         return
 
 
 def check_collision_with_bottom_wall():
-    global ball, score, playing_game, ui
+    global ball, score, playing_game, ui, height
 
     # In this case, user failed to hit the ball
     # thus he loses. The game resets.
-    if ball.ycor() < -280:
+    if ball.ycor() < -(height/2 - BALL_DIAMETER) and ball.y_move_dist < 0:
         ball.reset()
         score.decrease_lives()
         if score.lives == 0:
@@ -89,7 +80,9 @@ def check_collision_with_paddle():
     # from paddle(from its middle) is less than
     # width of paddle and ball is below a certain
     # coordinate to detect their collision
-    if ball.distance(paddle) <= 110 and ball.ycor() <= -250 and ball.y_move_dist < 0:
+    if ball.distance(paddle) <= HALF_PADDLE \
+            and ball.ycor() <= PADDLE_Y_POS + PADDLE_HEIGHT \
+            and ball.y_move_dist < 0:
 
         # If Paddle is on Right of Screen
         if paddle_x > 0:
@@ -128,13 +121,10 @@ def check_collision_with_paddle():
 
 
 def check_collision_with_bricks():
-    # returns True/False
     global ball, score, bricks
-    collided = False
 
     for brick in bricks.bricks:
         if ball.distance(brick) < 40:
-            collided = True
             score.increase_score()
             brick.clear()
             brick.goto(3000, 3000)
@@ -156,18 +146,33 @@ def check_collision_with_bricks():
             elif ball.ycor() > brick.upper_wall:
                 ball.bounce(x_bounce=False, y_bounce=True)
 
-            break
-
-    return collided
+            return
 
 
-while training_agent:
-    # reset the game
+def reset_the_game():
+    global score, bricks, ball, paddle, playing_game
+
     score.lives = 3
     bricks.reset()
     ball.reset()
-    paddle.goto(x=0, y=-280)
+    paddle.goto(x=0, y=PADDLE_Y_POS)
     playing_game = True
+
+
+def leave_game():
+    global playing_game, training_agent
+    playing_game = False
+    training_agent = False
+
+
+screen.listen()
+screen.onkey(key='Left', fun=paddle.move_left)
+screen.onkey(key='Right', fun=paddle.move_right)
+screen.onkey(key='Escape', fun=leave_game)
+
+
+while training_agent:
+    reset_the_game()
 
     # start a new game
     while playing_game:
@@ -186,7 +191,7 @@ while training_agent:
 
         # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
         screen.update()
-        # time.sleep(0.01)
+        time.sleep(0.01)
 
         # DETECTING COLLISION WITH WALLS
         check_collision_with_walls()
@@ -202,7 +207,6 @@ while training_agent:
         check_collision_with_bricks()
 
         # DETECTING USER'S VICTORY
-        print(len(bricks.bricks))
         if len(bricks.bricks) == 0:
             ui.game_over(win=True)
             playing_game = False
@@ -218,8 +222,8 @@ while training_agent:
     if len(bricks.bricks) == 0:
         ui.game_over(win=True)
     else:
-        ui.game_over(win=False)
         # agent lost the game, start over
+        ui.game_over(win=False)
 
     ui.saving_q_values()
     screen.update()

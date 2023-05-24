@@ -1,5 +1,6 @@
 from turtle import Turtle
 import random
+from globals.constants import *
 
 COLOR_LIST = ['light blue', 'royal blue',
               'light steel blue', 'steel blue',
@@ -27,7 +28,7 @@ class Brick(Turtle):
 
 class Bricks:
 
-    def __init__(self, screen_width=590):
+    def __init__(self, screen_width=SCREEN_WIDTH_BIG):
         self.y_start = 120
         self.y_end = 240
         self.x_start = int(-1 * screen_width / 2 + 30)

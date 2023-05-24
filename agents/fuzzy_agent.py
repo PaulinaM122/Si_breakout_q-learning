@@ -1,9 +1,10 @@
-from agent import Agent
-from Direction import Direction as Dir
+from agents.agent import Agent
+from globals.direction import Direction as Dir
+from globals.constants import *
 
 
 class FuzzyAgent(Agent):
-    def __init__(self, width=590):
+    def __init__(self, width=SCREEN_WIDTH_SMALL):
         # TODO: dobrać parametry tak, żeby nie wpadał w pętlę
         self.width = width
         self.paddle_left_mf = self.triangular(-width/2 - 10, -width/2, -width/4)
