@@ -1,5 +1,6 @@
 from turtle import Turtle
-from Direction import Direction as Dir
+from globals.direction import Direction as Dir
+from globals.constants import *
 
 MOVE_DIST = 10
 
@@ -13,11 +14,9 @@ class Ball(Turtle):
         self.x_move_dist = MOVE_DIST
         self.y_move_dist = MOVE_DIST
         self.reset()
-        self.last_position = None
         self.current_position = self.position()
 
     def move(self):
-        self.last_position = self.current_position
         new_y = self.ycor() + self.y_move_dist
         new_x = self.xcor() + self.x_move_dist
         self.goto(x=new_x, y=new_y)
@@ -44,7 +43,6 @@ class Ball(Turtle):
         self.goto(x=0, y=-240)
         self.x_move_dist = MOVE_DIST
         self.y_move_dist = MOVE_DIST
-        self.last_position = None
         self.current_position = self.position()
 
     def next_move(self):
@@ -53,8 +51,7 @@ class Ball(Turtle):
         return xcor, ycor
 
     def get_relative_position(self, paddle):
-        half_paddle = 110
-        if self.xcor() > paddle.xcor() - half_paddle and self.xcor() < paddle.xcor() + half_paddle:
+        if paddle.xcor() - HALF_PADDLE < self.xcor() < paddle.xcor() + HALF_PADDLE:
             relative_ball_pos = Dir.STAY
         elif self.xcor() < paddle.xcor():
             relative_ball_pos = Dir.LEFT
@@ -65,20 +62,10 @@ class Ball(Turtle):
     def get_direction(self):
         if self.x_move_dist < 0 and self.y_move_dist < 0:
             ball_dir = Dir.DOWN_LEFT
-        elif self.x_move_dist < 0 and self.y_move_dist >= 0:
+        elif self.x_move_dist < 0 <= self.y_move_dist:
             ball_dir = Dir.UP_LEFT
-        elif self.x_move_dist >= 0 and self.y_move_dist < 0:
+        elif self.x_move_dist >= 0 > self.y_move_dist:
             ball_dir = Dir.DOWN_RIGHT
         else:
             ball_dir = Dir.UP_RIGHT
         return ball_dir
-
-    def get_distance(self):
-        height = 600
-        if self.ycor() < height / 3 - height/2:
-            ball_distance = 0
-        elif self.ycor() < height / 3 * 2 - height/2:
-            ball_distance = 1
-        else:
-            ball_distance = 2
-        return ball_distance

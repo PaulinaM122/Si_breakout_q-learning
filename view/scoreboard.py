@@ -1,17 +1,17 @@
 from turtle import Turtle
 
 try:
-    score = int(open('highestScore.txt', 'r').read())
+    score = int(open('./database_files/highest_score.txt', 'r').read())
 except FileNotFoundError:
-    score = open('highestScore.txt', 'w').write(str(0))
+    score = open('./database_files/highest_score.txt', 'w').write(str(0))
 except ValueError:
     score = 0
 
 try:
-    with open('gameNumber.txt', 'r') as file:
+    with open('./database_files/game_number.txt', 'r') as file:
         game_number = int(file.read())
 except FileNotFoundError:
-    with open('gameNumber.txt', 'w') as file:
+    with open('./database_files/game_number.txt', 'w') as file:
         file.write(str(0))
     game_number = 0
 except ValueError:
@@ -56,5 +56,5 @@ class Scoreboard(Turtle):
         self.clear()
         self.score = 0
         self.update_score()
-        open('highestScore.txt', 'w').write(str(self.highScore))
-        open('gameNumber.txt', 'w').write(str(self.game_number))
+        open('./database_files/highest_score.txt', 'w').write(str(self.highScore))
+        open('./database_files/game_number.txt', 'w').write(str(self.game_number))

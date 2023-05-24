@@ -1,22 +1,27 @@
+import abc
 import random
+import os
 import json
 import utilities
-import os
-from agent import Agent
-from Direction import Direction as Dir
+from globals.direction import Direction as Dir
+from agents.agent import Agent
+from globals.constants import *
 
 
-class QLearningSimpleAgent(Agent):
-    def __init__(self, alpha=0.1, gamma=0.9, epsilon=0.1):
+class QLearningAgent(Agent):
+
+    def __init__(self, q_values_file_name, screen_width=SCREEN_WIDTH_SMALL, alpha=0.1, gamma=0.9, epsilon=0.1):
         self.alpha = alpha  # współczynnik uczenia się
         self.gamma = gamma  # współczynnik dyskontowania
         self.epsilon = epsilon  # współczynnik eksploracji
         self.q_values = {}  # słownik przechowujący wartości Q-funkcji dla każdego stanu i akcji
+        self.screen_width = screen_width
+        self.q_values_file_name = q_values_file_name
         super().__init__()
 
+    @abc.abstractmethod
     def get_state(self, ball, paddle, bricks):
-        return ball.get_relative_position(paddle), ball.get_direction()
-        # return ball.get_relative_position(paddle), ball.get_direction(), ball.get_distance()
+        pass
 
     def get_q_value(self, state, action):
         # funkcja zwracająca wartość Q-funkcji dla danego stanu i akcji
@@ -36,10 +41,9 @@ class QLearningSimpleAgent(Agent):
         # funkcja zwracająca możliwe akcje dla danego stanu
         # paletka nie może wychodzić poza obszar gry
         paddle_position = paddle.pos()
-        screen_width = 1200
-        left_side = -1 * (screen_width / 2) + 100
-        right_side = screen_width / 2 - 100
-        if paddle_position[0] > left_side and paddle_position[0] < right_side:
+        left_side = -self.screen_width / 2 + HALF_PADDLE
+        right_side = self.screen_width / 2 - HALF_PADDLE
+        if left_side < paddle_position[0] < right_side:
             return [Dir.LEFT, Dir.RIGHT, Dir.STAY]
         elif paddle_position[0] <= left_side:
             return [Dir.RIGHT, Dir.STAY]
@@ -65,19 +69,20 @@ class QLearningSimpleAgent(Agent):
             return self.get_best_action(state, paddle)
 
     def evaluate(self):
-        # TODO: możemy tu dać np obliczanie średnich, żeby zobaczyć, jak zmienić parametry w treningu i na koniec do tworzenia staystyk/wykresów
         success_rate = sum(self.success_history) / (self.num_games * 3)
         avg_reward = sum(self.reward_history) / self.num_games
         return success_rate, avg_reward
 
     def save_q_values(self):
-        # funkcja zapisująca wartości wytrenowanych q_values do pliku q_values.txt
-        with open('q_values_simple.txt', 'w') as file:
+        # funkcja zapisująca wartości wytrenowanych q_values do pliku
+        file_path = './database_files/' + self.q_values_file_name
+        with open(file_path, 'w') as file:
             file.write(json.dumps(utilities.map_dict_to_str(self.q_values), indent=0))
 
     def load_q_values(self):
-        # funkcja wczytująca wartości wytrenowanych q_values z pliku q_values.txt
-        if os.path.getsize('q_values_simple.txt') > 0:
-            with open('q_values_simple.txt', 'r') as file:
+        # funkcja wczytująca wartości wytrenowanych q_values z pliku
+        file_path = './database_files/' + self.q_values_file_name
+        if os.path.getsize(file_path) > 0:
+            with open(file_path, 'r') as file:
                 q_values_str = file.read()
                 self.q_values = utilities.map_str_to_dict(json.loads(q_values_str))
