@@ -1,4 +1,7 @@
 import turtle as tr
+
+import numpy as np
+
 from items.paddle import Paddle
 from items.ball import Ball
 from view.scoreboard import Scoreboard
@@ -167,9 +170,25 @@ def leave_game():
 
 screen.listen()
 screen.onkey(key='Left', fun=paddle.move_left)
-screen.onkey(key='Right', fun=paddle.move_right)
+#screen.onkey(key='Right', fun=agent.generate_q_value_plots())
 screen.onkey(key='Escape', fun=leave_game)
-
+# # Test pojedynczej aktualizacji
+#
+# state = [Dir.STAY.value, Dir.UP_LEFT.value]  # przykładowy stan
+# action = Dir.LEFT  # przykładowa akcja
+# next_state = [Dir.LEFT.value, Dir.UP_LEFT.value]  # przykładowy następny stan
+# reward = 1  # przykładowa nagroda
+# paddle = Paddle  # przykładowy paletka
+#
+# print("Przed aktualizacją:")
+# q_value_before = agent.get_q_value(state, action.value - 1)
+# print(f"Q-wartość przed aktualizacją: {q_value_before}")
+#
+# agent.update_q_value(state, action, next_state, reward, paddle)
+#
+# print("Po aktualizacji:")
+# q_value_after = agent.get_q_value(state, action.value - 1)
+# print(f"Q-wartość po aktualizacji: {q_value_after}")
 
 while training_agent:
     reset_the_game()
@@ -230,6 +249,10 @@ while training_agent:
     agent.save_q_values()
 
     agent.increase_num_games()
+
+    if agent.num_games == 2:
+        agent.generate_q_value_plots()
+
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
