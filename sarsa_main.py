@@ -7,12 +7,12 @@ from items.ball import Ball
 from view.scoreboard import Scoreboard
 from view.ui import UI
 from items.bricks import Bricks
-from agents.DeepQLearningAgent import DeepQLearningAgent
+from agents.SarsaAgent import SarsaAgent
 from globals.direction import Direction as Dir
 from globals.constants import *
 import time
 
-width = SCREEN_WIDTH_SMALL
+width = SCREEN_WIDTH_BIG
 height = SCREEN_HEIGHT
 
 screen = tr.Screen()
@@ -34,7 +34,7 @@ playing_game = True
 training_agent = True
 
 # create Deep Q-learning agent
-agent = DeepQLearningAgent()
+agent = SarsaAgent()
 agent.load_q_values()
 
 
@@ -170,30 +170,13 @@ def leave_game():
 
 screen.listen()
 screen.onkey(key='Left', fun=paddle.move_left)
-#screen.onkey(key='Right', fun=agent.generate_q_value_plots())
+screen.onkey(key='Right', fun=paddle.move_right)
 screen.onkey(key='Escape', fun=leave_game)
-# # Test pojedynczej aktualizacji
-#
-# state = [Dir.STAY.value, Dir.UP_LEFT.value]  # przykładowy stan
-# action = Dir.LEFT  # przykładowa akcja
-# next_state = [Dir.LEFT.value, Dir.UP_LEFT.value]  # przykładowy następny stan
-# reward = 1  # przykładowa nagroda
-# paddle = Paddle  # przykładowy paletka
-#
-# print("Przed aktualizacją:")
-# q_value_before = agent.get_q_value(state, action.value - 1)
-# print(f"Q-wartość przed aktualizacją: {q_value_before}")
-#
-# agent.update_q_value(state, action, next_state, reward, paddle)
-#
-# print("Po aktualizacji:")
-# q_value_after = agent.get_q_value(state, action.value - 1)
-# print(f"Q-wartość po aktualizacji: {q_value_after}")
+
 
 while training_agent:
     reset_the_game()
 
-    # start a new game
     while playing_game:
         reward = 0
         ball.move()
@@ -210,7 +193,7 @@ while training_agent:
 
         # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
         screen.update()
-        #time.sleep(0.01)
+        time.sleep(0.01)
 
         # DETECTING COLLISION WITH WALLS
         check_collision_with_walls()
@@ -235,7 +218,15 @@ while training_agent:
 
         # update Q-values
         next_state = agent.get_state(ball, paddle, bricks)
-        agent.update_q_value(state, action, next_state, reward, paddle)
+        next_action = agent.get_action(next_state, paddle)
+        agent.update_q_value(state, action, next_state, next_action, reward, paddle)
+
+        # Update previous state and action for SARSA
+        agent.prev_state = state
+        agent.prev_action = action
+
+    # save Q-values to a file
+    agent.update_q_value(state, action, next_state, next_action, reward, paddle)
 
     # check if the agent won the game
     if len(bricks.bricks) == 0:
@@ -250,8 +241,6 @@ while training_agent:
 
     agent.increase_num_games()
 
-    if agent.num_games == 2:
-        agent.generate_q_value_plots()
 
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
