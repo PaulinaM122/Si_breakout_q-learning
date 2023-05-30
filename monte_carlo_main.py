@@ -35,7 +35,7 @@ training_agent = True
 
 # create Deep Q-learning agent
 agent = MonteCarloAgent()
-agent.load_q_values()
+agent.load_q_values2()
 
 
 def check_collision_with_walls():

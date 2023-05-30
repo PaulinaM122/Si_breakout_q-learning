@@ -1,6 +1,7 @@
 import abc
 import random
 import os
+import re
 import json
 import utilities
 from globals.direction import Direction as Dir
@@ -79,10 +80,55 @@ class QLearningAgent(Agent):
         with open(file_path, 'w') as file:
             file.write(json.dumps(utilities.map_dict_to_str(self.q_values), indent=0))
 
-    def load_q_values(self):
-        # funkcja wczytująca wartości wytrenowanych q_values z pliku
+    def load_q_values2(self):
         file_path = './database_files/' + self.q_values_file_name
-        if os.path.getsize(file_path) > 0:
+        self.q_values = {}
+
+        if os.path.exists(file_path):
             with open(file_path, 'r') as file:
-                q_values_str = file.read()
-                self.q_values = utilities.map_str_to_dict(json.loads(q_values_str))
+                try:
+                    data = json.load(file)
+                except json.decoder.JSONDecodeError:
+                    return self.q_values
+
+            for key, value in data.items():
+                # Parsowanie klucza w formacie "((3, 7), <Direction.RIGHT: 3>)"
+                match = re.search(r'\(\((\d+), (\d+)\), <Direction\.[A-Z]+: (\d+)>', key)
+                state1 = int(match.group(1))
+                state2 = int(match.group(2))
+                action = Dir(int(match.group(3)))
+
+                # Parsowanie wartości jako float
+                q_value = float(value)
+                state = (state1,state2)
+                # Przypisanie wartości do słownika q_values
+                self.q_values[(state, action)] = q_value
+
+        return self.q_values
+
+    def load_q_values(self):
+        file_path = './database_files/' + self.q_values_file_name
+        self.q_values = {}
+
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as file:
+                try:
+                    data = json.load(file)
+                except json.decoder.JSONDecodeError:
+                    return self.q_values
+
+            for key, value in data.items():
+                # Parsowanie klucza w formacie "((<Direction.STAY: 1>, <Direction.UP_RIGHT: 4>), <Direction.STAY: 1>)"
+                match = re.search(
+                    r'\(\(<Direction\.[A-Z_]+: (\d+)>, <Direction\.[A-Z_]+: (\d+)>\), <Direction\.[A-Z_]+: (\d+)>', key)
+                state1 = Dir(int(eval(match.group(1))))
+                state2 = Dir(int(eval(match.group(2))))
+                action = Dir(int(eval(match.group(3))))
+
+                # Parsowanie wartości jako float
+                q_value = float(value)
+                state = (state1, state2)
+                # Przypisanie wartości do słownika q_values
+                self.q_values[(state, action)] = q_value
+
+        return self.q_values

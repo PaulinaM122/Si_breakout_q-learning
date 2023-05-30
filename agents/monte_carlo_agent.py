@@ -80,28 +80,6 @@ class MonteCarloAgent(QLearningAgent):
         self.returns = {}
         self.state_action_counts = {}
 
-    def load_q_values(self):
-        file_path = './database_files/' + self.q_values_file_name
-        self.q_values = {}
-
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as file:
-                data = json.load(file)
-
-            for key, value in data.items():
-                # Parsowanie klucza w formacie "((3, 7), <Direction.RIGHT: 3>)"
-                match = re.search(r'\(\((\d+), (\d+)\), <Direction\.[A-Z]+: (\d+)>', key)
-                state1 = int(match.group(1))
-                state2 = int(match.group(2))
-                action = Dir(int(match.group(3)))
-
-                # Parsowanie wartości jako float
-                q_value = float(value)
-                state = (state1,state2)
-                # Przypisanie wartości do słownika q_values
-                self.q_values[(state, action)] = q_value
-
-        return self.q_values
 
     def plot_q_value_history(self):
         for action, state_values in self.q_value_history.items():
