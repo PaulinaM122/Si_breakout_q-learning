@@ -1,16 +1,26 @@
+import ast
 import json
+import re
 import os
 import random
+
+import utilities
 from agents.q_learning_agent import QLearningAgent
 from globals.constants import *
 import numpy as np
-import pickle
+import matplotlib.pyplot as plt
+from globals.direction import Direction as Dir
 
 
 class MonteCarloAgent(QLearningAgent):
     def __init__(self):
         self.returns = {}  # słownik przechowujący sumy zwrotów dla każdego stanu i akcji
-        self.state_action_counts = {}  # słownik przechowujący liczbę wystąpień danego stanu i akcji
+        self.state_action_counts = {}
+        self.q_value_history = {
+            Dir.LEFT: {},
+            Dir.RIGHT: {},
+            Dir.STAY: {}
+        }
         super().__init__(q_values_file_name='q_values_monte.txt', screen_width=SCREEN_WIDTH_BIG)
 
     def get_state(self, ball, paddle, bricks):
@@ -40,6 +50,11 @@ class MonteCarloAgent(QLearningAgent):
                 self.state_action_counts[(state_tuple, action)] = self.state_action_counts.get((state_tuple, action), 0) + 1
                 self.q_values[(state_tuple, action)] = self.returns[(state_tuple, action)] / self.state_action_counts[(state_tuple, action)]
 
+                # Dodaj wartość Q-funkcji do historii
+                if state_tuple not in self.q_value_history[action]:
+                    self.q_value_history[action][state_tuple] = []
+                self.q_value_history[action][state_tuple].append(self.q_values[(state_tuple, action)])
+
             G = self.gamma * G + reward
 
     def get_best_action(self, state, paddle):
@@ -65,16 +80,36 @@ class MonteCarloAgent(QLearningAgent):
         self.returns = {}
         self.state_action_counts = {}
 
-    def save_q_values(self):
-        # funkcja zapisująca wartości wytrenowanych q_values do pliku
-        file_path = './database_files/' + self.q_values_file_name
-        q_values_str = {str(key): value for key, value in self.q_values.items()}
-        with open(file_path, 'w') as file:
-            json.dump(q_values_str, file)
-
     def load_q_values(self):
-        # funkcja wczytująca wartości wytrenowanych q_values z pliku
         file_path = './database_files/' + self.q_values_file_name
-        if os.path.isfile(file_path) and os.path.getsize(file_path) > 0:
+        self.q_values = {}
+
+        if os.path.exists(file_path):
             with open(file_path, 'r') as file:
-                self.q_values = json.load(file)
+                data = json.load(file)
+
+            for key, value in data.items():
+                # Parsowanie klucza w formacie "((3, 7), <Direction.RIGHT: 3>)"
+                match = re.search(r'\(\((\d+), (\d+)\), <Direction\.[A-Z]+: (\d+)>', key)
+                state1 = int(match.group(1))
+                state2 = int(match.group(2))
+                action = Dir(int(match.group(3)))
+
+                # Parsowanie wartości jako float
+                q_value = float(value)
+                state = (state1,state2)
+                # Przypisanie wartości do słownika q_values
+                self.q_values[(state, action)] = q_value
+
+        return self.q_values
+
+    def plot_q_value_history(self):
+        for action, state_values in self.q_value_history.items():
+            plt.figure()
+            for state, q_values in state_values.items():
+                plt.plot(range(len(q_values)), q_values, label=str(state))
+            plt.xlabel('Episodes')
+            plt.ylabel('Q-value')
+            plt.legend()
+            plt.title(f'Action: {action.name}')
+        plt.show()

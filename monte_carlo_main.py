@@ -173,10 +173,9 @@ screen.onkey(key='Left', fun=paddle.move_left)
 screen.onkey(key='Right', fun=paddle.move_right)
 screen.onkey(key='Escape', fun=leave_game)
 
-
+episode = []
 while training_agent:
     reset_the_game()
-    episode = []
 
     # start a new game
     while playing_game:
@@ -200,7 +199,8 @@ while training_agent:
         # DETECTING COLLISION WITH WALLS
         check_collision_with_walls()
         if check_collision_with_bottom_wall():
-            reward += -1 * abs(ball.xcor() - paddle.xcor())
+            #reward += -1 * abs(ball.xcor() - paddle.xcor())
+            reward += - 30
             agent.success_history.append(0)
 
         # DETECTING COLLISION WITH THE PADDLE
@@ -223,6 +223,7 @@ while training_agent:
 
     agent.update_q_value(episode)  # Aktualizuj wartości Q-funkcji na podstawie epizodu
     agent.reset_episode_data()  # Zresetuj dane epizodu
+    #agent.plot_q_value_history()
 
     # save Q-values to a file
     agent.save_q_values()
