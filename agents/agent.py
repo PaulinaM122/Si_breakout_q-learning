@@ -1,6 +1,6 @@
 import abc
 from globals.constants import *
-
+import numpy as np
 
 class Agent(abc.ABC):
     def __init__(self):
