@@ -8,6 +8,7 @@ class Agent(abc.ABC):
         self.max_num_games = MAX_NUM_GAMES  # maksymalna liczba gier do rozegrania
         self.reward_history = [0] * self.max_num_games
         self.success_history = []
+        self.bricks_left = []
 
     @abc.abstractmethod
     def get_action(self):

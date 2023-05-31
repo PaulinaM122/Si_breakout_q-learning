@@ -1,6 +1,7 @@
 import turtle as tr
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from items.paddle import Paddle
 from items.ball import Ball
@@ -239,9 +240,17 @@ while training_agent:
     screen.update()
     agent.save_q_values()
 
+    agent.bricks_left.append(len(bricks.bricks))
+
     agent.increase_num_games()
-
-
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
+
+average = "{:.2f}".format(np.average(agent.bricks_left))
+
+plt.plot(agent.bricks_left)
+plt.title("Monte Carlo - liczba pozostałych klocków na koniec gry\nśrednia: " + str(average))
+plt.xlabel("numer gry")
+plt.ylabel("liczba pozostałych klocków")
+plt.savefig("charts/monte_carlo_agent.png")

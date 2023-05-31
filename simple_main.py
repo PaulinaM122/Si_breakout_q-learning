@@ -1,4 +1,8 @@
 import turtle as tr
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 from items.paddle import Paddle
 from items.ball import Ball
 from view.scoreboard import Scoreboard
@@ -229,7 +233,17 @@ while training_agent:
     screen.update()
     agent.save_q_values()
 
+    agent.bricks_left.append(len(bricks.bricks))
+
     agent.increase_num_games()
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
+
+average = "{:.2f}".format(np.average(agent.bricks_left))
+
+plt.plot(agent.bricks_left)
+plt.title("Simple Q-learning - liczba pozostałych klocków na koniec gry\nśrednia: " + str(average))
+plt.xlabel("numer gry")
+plt.ylabel("liczba pozostałych klocków")
+plt.savefig("charts/simple_agent.png")

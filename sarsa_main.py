@@ -1,6 +1,7 @@
 import turtle as tr
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from items.paddle import Paddle
 from items.ball import Ball
@@ -226,6 +227,7 @@ while training_agent:
         agent.prev_action = action
 
     # save Q-values to a file
+    # TODO czy tu nie powinno być zapisywania do pliku?
     agent.update_q_value(state, action, next_state, next_action, reward, paddle)
 
     # check if the agent won the game
@@ -239,9 +241,17 @@ while training_agent:
     screen.update()
     agent.save_q_values()
 
+    agent.bricks_left.append(len(bricks.bricks))
+
     agent.increase_num_games()
-
-
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
+
+average = "{:.2f}".format(np.average(agent.bricks_left))
+
+plt.plot(agent.bricks_left)
+plt.title("SARSA - liczba pozostałych klocków na koniec gry\nśrednia: " + str(average))
+plt.xlabel("numer gry")
+plt.ylabel("liczba pozostałych klocków")
+plt.savefig("charts/sarsa_agent.png")
