@@ -13,11 +13,11 @@ class FuzzyAgent(Agent):
         self.paddle_right_mf = self.trapezoidal(screen_width / 12 - 100, screen_width / 6, screen_width / 4, screen_width / 3 + 100)
         self.paddle_far_right_mf = self.triangular(screen_width / 4 + 120, screen_width / 2, screen_width / 2 + 10)
 
-        self.ball_far_left_mf = self.triangular(-screen_width / 2 - 10, -screen_width / 2, -screen_width / 4 - 120)
-        self.ball_left_mf = self.trapezoidal(-screen_width / 3 - 100, -screen_width / 4, -screen_width / 6, -screen_width / 12 + 120)
+        self.ball_far_left_mf = self.triangular(-screen_width / 2 - 10, -screen_width / 2, -screen_width / 4 - 110)
+        self.ball_left_mf = self.trapezoidal(-screen_width / 3 - 100, -screen_width / 4, -screen_width / 6, -screen_width / 12 + 90)
         self.ball_center_mf = self.triangular(-screen_width / 6 + 100, 0, screen_width / 6 - 100)
-        self.ball_right_mf = self.trapezoidal(screen_width / 12 - 120, screen_width / 6, screen_width / 4, screen_width / 3 + 100)
-        self.ball_far_right_mf = self.triangular(screen_width / 4 + 120, screen_width / 2, screen_width / 2 + 10)
+        self.ball_right_mf = self.trapezoidal(screen_width / 12 - 90, screen_width / 6, screen_width / 4, screen_width / 3 + 100)
+        self.ball_far_right_mf = self.triangular(screen_width / 4 + 110, screen_width / 2, screen_width / 2 + 10)
 
         self.possible_actions = {
             Dir.LEFT.value: 0.0,
@@ -104,9 +104,9 @@ class FuzzyAgent(Agent):
         # if paddle right and ball right
         stay.append(min(self.paddle_pos['right'], self.ball_pos['right']))
         # if paddle far left and ball far left
-        stay.append(min(self.paddle_pos['far_left'], self.ball_pos['far_left'])) # 16
+        stay.append(min(self.paddle_pos['far_left'], self.ball_pos['far_left']))
         # if paddle far right and ball far right
-        stay.append(min(self.paddle_pos['far_right'], self.ball_pos['far_right'])) # 17
+        stay.append(min(self.paddle_pos['far_right'], self.ball_pos['far_right']))
 
         # action - left
         # if paddle left and ball far left
@@ -122,13 +122,13 @@ class FuzzyAgent(Agent):
         # if paddle right and ball center
         left.append(min(self.paddle_pos['right'], self.ball_pos['center']))
         # if paddle far right and ball far left
-        left.append(min(self.paddle_pos['far_right'], self.ball_pos['far_left'])) # 18
+        left.append(min(self.paddle_pos['far_right'], self.ball_pos['far_left']))
         # if paddle far right and ball left
-        left.append(min(self.paddle_pos['far_right'], self.ball_pos['left'])) # 19
+        left.append(min(self.paddle_pos['far_right'], self.ball_pos['left']))
         # if paddle far right and ball center
-        left.append(min(self.paddle_pos['far_right'], self.ball_pos['center'])) # 20
+        left.append(min(self.paddle_pos['far_right'], self.ball_pos['center']))
         # if paddle far right and ball right
-        left.append(min(self.paddle_pos['far_right'], self.ball_pos['right'])) # 21
+        left.append(min(self.paddle_pos['far_right'], self.ball_pos['right']))
 
         # action - right
         # if paddle right and ball far right
@@ -144,13 +144,13 @@ class FuzzyAgent(Agent):
         # if paddle left and ball center
         right.append(min(self.paddle_pos['left'], self.ball_pos['center']))
         # if paddle far left and ball far right
-        right.append(min(self.paddle_pos['far_left'], self.ball_pos['far_right'])) #22
+        right.append(min(self.paddle_pos['far_left'], self.ball_pos['far_right']))
         # if paddle far left and ball right
-        right.append(min(self.paddle_pos['far_left'], self.ball_pos['right'])) #23
+        right.append(min(self.paddle_pos['far_left'], self.ball_pos['right']))
         # if paddle far left and ball center
-        right.append(min(self.paddle_pos['far_left'], self.ball_pos['center'])) #24
+        right.append(min(self.paddle_pos['far_left'], self.ball_pos['center']))
         # if paddle far left and ball left
-        right.append(min(self.paddle_pos['far_left'], self.ball_pos['left'])) #25
+        right.append(min(self.paddle_pos['far_left'], self.ball_pos['left']))
 
         self.possible_actions[Dir.LEFT.value] = max(left)
         self.possible_actions[Dir.STAY.value] = max(stay)
@@ -193,7 +193,7 @@ class FuzzyAgent(Agent):
         plt.title('Pozycja paletki')
         plt.xlabel('Położenie')
         plt.ylabel('Stopień przynależności')
-        plt.legend(['dalekie lewo', 'lewo', 'środek', 'prawo', 'dalekie prawo'])
+        plt.legend(['dalekie lewo', 'lewo', 'środek', 'prawo', 'dalekie prawo'], loc='upper right')
 
         plt.subplot(1, 2, 2)
         plt.plot(x, y_ball_far_left, 'b', linewidth=1.5)
@@ -204,6 +204,6 @@ class FuzzyAgent(Agent):
         plt.title('Pozycja piłki')
         plt.xlabel('Położenie')
         plt.ylabel('Stopień przynależności')
-        plt.legend(['dalekie lewo', 'lewo', 'środek', 'prawo', 'dalekie prawo'])
+        plt.legend(['dalekie lewo', 'lewo', 'środek', 'prawo', 'dalekie prawo'], loc='upper right')
 
         plt.show()

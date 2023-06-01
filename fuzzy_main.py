@@ -169,6 +169,7 @@ screen.onkey(key='Left', fun=paddle.move_left)
 screen.onkey(key='Right', fun=paddle.move_right)
 screen.onkey(key='Escape', fun=leave_game)
 
+n_bricks = len(bricks.bricks)
 agent.plot_membership_functions()
 
 while training_agent:
@@ -218,6 +219,8 @@ while training_agent:
             agent.success_history.append(1)
 
         agent.reward_history[agent.num_games] += reward
+
+    print(f"Number of destroyed bricks: {n_bricks - len(bricks.bricks)}")
 
     # check if the agent won the game
     if len(bricks.bricks) == 0:
