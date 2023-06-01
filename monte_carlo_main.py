@@ -16,6 +16,10 @@ import time
 width = SCREEN_WIDTH_BIG
 height = SCREEN_HEIGHT
 
+max_bricks = MAX_BRICKS_BIG
+if width == SCREEN_WIDTH_SMALL:
+    max_bricks = MAX_BRICKS_SMALL
+
 screen = tr.Screen()
 screen.setup(width=width, height=height)
 screen.bgcolor('black')
@@ -240,17 +244,17 @@ while training_agent:
     screen.update()
     agent.save_q_values()
 
-    agent.bricks_left.append(len(bricks.bricks))
+    agent.bricks_hit.append(max_bricks - len(bricks.bricks))
 
     agent.increase_num_games()
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
 
-average = "{:.2f}".format(np.average(agent.bricks_left))
+average = "{:.2f}".format(np.average(agent.bricks_hit))
 
-plt.plot(agent.bricks_left)
-plt.title("Monte Carlo - liczba pozostałych klocków na koniec gry\nśrednia: " + str(average))
+plt.plot(agent.bricks_hit)
+plt.title("Monte Carlo - liczba zbitych klocków na koniec gry\nśrednia: " + str(average))
 plt.xlabel("numer gry")
-plt.ylabel("liczba pozostałych klocków")
+plt.ylabel("liczba zbitych klocków")
 plt.savefig("charts/monte_carlo_agent.png")
