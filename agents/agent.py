@@ -1,6 +1,6 @@
 import abc
 from globals.constants import *
-
+import numpy as np
 
 class Agent(abc.ABC):
     def __init__(self):
@@ -8,6 +8,7 @@ class Agent(abc.ABC):
         self.max_num_games = MAX_NUM_GAMES  # maksymalna liczba gier do rozegrania
         self.reward_history = [0] * self.max_num_games
         self.success_history = []
+        self.bricks_hit = []
 
     @abc.abstractmethod
     def get_action(self):

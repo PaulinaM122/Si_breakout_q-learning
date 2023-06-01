@@ -1,6 +1,7 @@
 import turtle as tr
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from items.paddle import Paddle
 from items.ball import Ball
@@ -14,6 +15,10 @@ import time
 
 width = SCREEN_WIDTH_BIG
 height = SCREEN_HEIGHT
+
+max_bricks = MAX_BRICKS_BIG
+if width == SCREEN_WIDTH_SMALL:
+    max_bricks = MAX_BRICKS_SMALL
 
 screen = tr.Screen()
 screen.setup(width=width, height=height)
@@ -226,6 +231,7 @@ while training_agent:
         agent.prev_action = action
 
     # save Q-values to a file
+    # TODO czy tu nie powinno być zapisywania do pliku?
     agent.update_q_value(state, action, next_state, next_action, reward, paddle)
 
     # check if the agent won the game
@@ -239,9 +245,17 @@ while training_agent:
     screen.update()
     agent.save_q_values()
 
+    agent.bricks_hit.append(max_bricks - len(bricks.bricks))
+
     agent.increase_num_games()
-
-
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
+
+average = "{:.2f}".format(np.average(agent.bricks_hit))
+
+plt.plot(agent.bricks_hit)
+plt.title("SARSA - liczba zbitych klocków na koniec gry\nśrednia: " + str(average))
+plt.xlabel("numer gry")
+plt.ylabel("liczba zbitych klocków")
+plt.savefig("charts/sarsa_agent.png")

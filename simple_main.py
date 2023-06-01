@@ -1,4 +1,8 @@
 import turtle as tr
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 from items.paddle import Paddle
 from items.ball import Ball
 from view.scoreboard import Scoreboard
@@ -11,6 +15,10 @@ import time
 
 width = SCREEN_WIDTH_BIG
 height = SCREEN_HEIGHT
+
+max_bricks = MAX_BRICKS_BIG
+if width == SCREEN_WIDTH_SMALL:
+    max_bricks = MAX_BRICKS_SMALL
 
 screen = tr.Screen()
 screen.setup(width=width, height=height)
@@ -191,7 +199,7 @@ while training_agent:
 
         # UPDATE SCREEN WITH ALL THE MOTION THAT HAS HAPPENED
         screen.update()
-        time.sleep(0.01)
+        #time.sleep(0.01)
 
         # DETECTING COLLISION WITH WALLS
         check_collision_with_walls()
@@ -229,7 +237,18 @@ while training_agent:
     screen.update()
     agent.save_q_values()
 
+    agent.bricks_hit.append(max_bricks - len(bricks.bricks))
+
     agent.increase_num_games()
+    print(agent.num_games)
     # check if the maximum number of games has been reached
     if agent.num_games >= agent.max_num_games:
         break
+
+average = "{:.2f}".format(np.average(agent.bricks_hit))
+
+plt.plot(agent.bricks_hit)
+plt.title("Simple Q-learning - liczba zbitych klocków na koniec gry\nśrednia: " + str(average))
+plt.xlabel("numer gry")
+plt.ylabel("liczba zbitych klocków")
+plt.savefig("charts/simple_agent.png")

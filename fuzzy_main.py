@@ -169,6 +169,7 @@ screen.onkey(key='Left', fun=paddle.move_left)
 screen.onkey(key='Right', fun=paddle.move_right)
 screen.onkey(key='Escape', fun=leave_game)
 
+agent.plot_membership_functions()
 
 while training_agent:
     reset_the_game()
